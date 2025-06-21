@@ -188,3 +188,26 @@ html, body {
 .section-heading-underline {
   @apply block w-12 h-1 bg-black dark:bg-white rounded-full mt-2;
 }
+
+.mobile-menu {
+  z-index: 100;
+}
+
+.ql-editor.ql-blank::before {
+  @apply text-muted-foreground;
+}
+
+/* Custom styles for Quill line-height dropdown */
+.ql-snow .ql-picker.ql-lineheight {
+  width: 6em; /* Give it some width to be visible */
+}
+
+.ql-snow .ql-picker.ql-lineheight .ql-picker-label::before,
+.ql-snow .ql-picker.ql-lineheight .ql-picker-item::before {
+  content: attr(data-value) !important;
+}
+
+.ql-snow .ql-picker.ql-lineheight .ql-picker-label,
+.ql-snow .ql-picker.ql-lineheight .ql-picker-item {
+  padding-left: 10px; /* Add some padding for readability */
+}

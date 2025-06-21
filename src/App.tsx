@@ -19,6 +19,7 @@ import LivePage from './pages/LivePage';
 import LiveStreamPage from './pages/LiveStreamPage';
 import { MainLayout } from "./components/layout/MainLayout";
 import { ScrollToTop } from "./components/utils/ScrollToTop";
+import AboutUsPage from "./pages/AboutUsPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/videos" element={<MainLayout><VideoPage /></MainLayout>} />
                 <Route path="/live" element={<MainLayout><LivePage /></MainLayout>} />
                 <Route path="/live/:id" element={<MainLayout><LiveStreamPage /></MainLayout>} />
+                <Route path="/about-us" element={<MainLayout><AboutUsPage /></MainLayout>} />
                 <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
               </Routes>
             </BrowserRouter>

@@ -96,7 +96,7 @@ export const CategoryManager = () => {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Category</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Table>
           <TableHeader>
             <TableRow>

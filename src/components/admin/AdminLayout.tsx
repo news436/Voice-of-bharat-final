@@ -14,6 +14,7 @@ import {
   BarChart3,
   LogOut,
   Users,
+  Info,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,7 +27,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -82,6 +83,7 @@ export const AdminLayout = ({
     { id: 'live' as AdminSection, label: 'Live Streams', icon: Radio },
     { id: 'admanager' as AdminSection, label: 'Ad Manager', icon: BarChart3 },
     { id: 'analytics' as AdminSection, label: 'Analytics', icon: LineChart },
+    { id: 'about' as AdminSection, label: 'About Us', icon: Info },
   ];
   
   const SidebarContent = () => (

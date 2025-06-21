@@ -97,12 +97,12 @@ const WeatherReport = () => {
               </div>
             </div>
 
-            <div className="flex justify-center items-center my-4 sm:my-8">
-              <p className="text-6xl sm:text-8xl font-black tracking-tighter drop-shadow-lg">{Math.round(weather.current.temperature_2m)}°</p>
+            <div className="flex justify-center items-center my-4">
+              <p className="text-6xl font-black tracking-tighter drop-shadow-lg">{Math.round(weather.current.temperature_2m)}°</p>
             </div>
 
             <div className="flex justify-between items-end mt-auto">
-              <p className="text-base sm:text-lg font-medium">{weatherLabel}</p>
+              <p className="text-base font-medium">{weatherLabel}</p>
               <div className="flex items-center gap-2 text-sm">
                 <Wind className="w-5 h-5" />
                 <span>{weather.current.wind_speed_10m.toFixed(1)} km/h</span>

@@ -13,13 +13,13 @@ import StockWidget from '@/components/news/StockWidget';
 import { FeaturedArticles } from '@/components/news/FeaturedArticles';
 import { Calendar } from 'lucide-react';
 import { AdSlot } from '@/components/news/AdSlot';
+import { AboutUsSection } from '@/components/news/AboutUsSection';
 
 const Index = () => {
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
   const [featuredArticles, setFeaturedArticles] = useState<any[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
   const [liveStreams, setLiveStreams] = useState<any[]>([]);
-  const [breakingNews, setBreakingNews] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,12 +59,6 @@ const Index = () => {
 
         if (error) throw error;
 
-        const now = new Date();
-        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-        const breaking = allArticles.filter(a => a.is_breaking && new Date(a.published_at) > twentyFourHoursAgo);
-        setBreakingNews(breaking);
-
         const featured = allArticles.filter(a => a.is_featured);
         setFeaturedArticles(featured);
         
@@ -102,9 +96,6 @@ const Index = () => {
 
   return (
     <div className="bg-white dark:bg-black">
-      {breakingNews.length > 0 && (
-        <BreakingNewsTicker news={breakingNews} language={language} />
-      )}
       <main className="container mx-auto px-4 py-6">
         <div className="my-6">
           <AdSlot slotNumber={2} />
@@ -138,23 +129,23 @@ const Index = () => {
           <h2 className="text-2xl font-bold text-black dark:text-white mb-6 border-b-2 border-red-600 pb-2 inline-block">
                   {t('latest_news')}
                 </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                   {recentArticles.map((article) => {
                     const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
                     return (
                       <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
                        <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col relative overflow-hidden border border-gray-200 dark:border-gray-700">
-                         <CardContent className="flex-1 flex flex-col p-2 md:p-3 lg:p-4">
+                         <CardContent className="flex-1 flex flex-col p-0">
                             {article.featured_image_url && (
                              <div className="relative">
                               <img
                                 src={article.featured_image_url}
                                 alt={title}
-                                 className="w-full h-48 object-cover rounded-t-2xl"
+                                 className="w-full h-48 object-cover"
                               />
                              </div>
                             )}
-                            <div className="space-y-2 flex-1 flex flex-col">
+                            <div className="p-4 space-y-2 flex-1 flex flex-col">
                               <div className="flex items-center space-x-2">
                                 {article.categories && (
                                  <Badge variant="outline" className="border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-xs font-medium px-2 py-0.5 rounded-md">
@@ -201,6 +192,8 @@ const Index = () => {
         {videos.length > 0 && (
           <VideoSection videos={videos} />
         )}
+        
+        <AboutUsSection />
       </main>
     </div>
   );

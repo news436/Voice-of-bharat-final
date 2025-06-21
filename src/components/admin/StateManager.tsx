@@ -90,7 +90,7 @@ export const StateManager = () => {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add State</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Table>
           <TableHeader>
             <TableRow>

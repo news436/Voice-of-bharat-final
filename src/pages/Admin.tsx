@@ -11,9 +11,10 @@ import { LiveStreamManager } from '@/components/admin/LiveStreamManager';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { StateManager } from '@/components/admin/StateManager';
 import { AdManager } from '@/components/admin/AdManager';
+import { AboutUsManager } from '@/components/admin/AboutUsManager';
 import { toast } from '@/hooks/use-toast';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -103,6 +104,8 @@ const Admin = () => {
         return <StateManager />;
       case 'admanager':
         return <AdManager />;
+      case 'about':
+        return <AboutUsManager />;
       default:
         return <AdminDashboard onQuickAction={handleSectionChange} userProfile={userProfile} />;
     }

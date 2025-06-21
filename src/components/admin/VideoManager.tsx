@@ -123,7 +123,7 @@ export const VideoManager = () => {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Video</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Table>
           <TableHeader>
             <TableRow>

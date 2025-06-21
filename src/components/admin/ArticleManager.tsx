@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -14,7 +14,26 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
-const ReactQuill = lazy(() => import('react-quill'));
+const ReactQuill = lazy(() =>
+  import('react-quill').then(module => {
+    const Quill = module.Quill;
+    const Parchment = Quill.import('parchment');
+
+    // Create a custom line-height style
+    const LineHeightStyle = new Parchment.Attributor.Style(
+      'lineheight', 
+      'line-height', 
+      {
+        scope: Parchment.Scope.BLOCK, // Apply to the entire block
+        whitelist: ['1', '1.5', '2', '2.5', '3']
+      }
+    );
+    
+    Quill.register({ 'formats/lineheight': LineHeightStyle }, true);
+    
+    return { default: module.default };
+  })
+);
 
 type Article = any; // Replace with a proper type definition
 
@@ -199,13 +218,14 @@ export const ArticleManager = () => {
       ['bold', 'italic', 'underline', 'strike', 'blockquote'],
       [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
       ['link', 'image'],
+      [{ 'lineheight': ['1', '1.5', '2', '2.5', '3'] }],
       ['clean']
     ],
   }), []);
 
   useEffect(() => {
     // Dynamically import Quill CSS
-    import('quill/dist/quill.snow.css');
+    import('react-quill/dist/quill.snow.css');
   }, []);
 
   if (showForm) {
@@ -235,7 +255,7 @@ export const ArticleManager = () => {
                 <CardHeader>
                   <CardTitle>Article Content</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 p-6">
                   <div>
                     <Label htmlFor="title">Title</Label>
                     <Input id="title" placeholder="Enter article title..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required/>
@@ -261,7 +281,7 @@ export const ArticleManager = () => {
 
               <Card>
                  <CardHeader><CardTitle>Hindi Content</CardTitle></CardHeader>
-                 <CardContent className="space-y-6">
+                 <CardContent className="space-y-6 p-6">
                     <div>
                       <Label htmlFor="title_hi">Title (Hindi)</Label>
                       <Input id="title_hi" placeholder="Enter Hindi title" value={formData.title_hi} onChange={e => setFormData({...formData, title_hi: e.target.value})} />
@@ -285,7 +305,7 @@ export const ArticleManager = () => {
             <div className="md:col-span-1 lg:col-span-1 space-y-6">
                <Card>
                   <CardHeader><CardTitle>Publishing</CardTitle></CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 p-6">
                      <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
                         <Select 
@@ -317,7 +337,7 @@ export const ArticleManager = () => {
                </Card>
                <Card>
                   <CardHeader><CardTitle>Details</CardTitle></CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 p-6">
                       <div className="space-y-2">
                         <Label htmlFor="category">Category</Label>
                         <Select value={formData.category_id} onValueChange={id => setFormData({...formData, category_id: id})}>
@@ -362,7 +382,7 @@ export const ArticleManager = () => {
                </Card>
                <Card>
                   <CardHeader><CardTitle>SEO Optimization</CardTitle></CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-6 p-6">
                      <div>
                         <Label htmlFor="meta_title">Meta Title</Label>
                         <Input id="meta_title" placeholder="Enter meta title" value={formData.meta_title} onChange={e => setFormData({...formData, meta_title: e.target.value})} />
@@ -386,20 +406,20 @@ export const ArticleManager = () => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="px-7 flex flex-row items-center justify-between">
         <CardTitle>Articles</CardTitle>
         <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="gap-1">
-                <ListFilter className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
-            </Button>
-            <Button size="sm" className="gap-1" onClick={() => setShowForm(true)}>
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">New Article</span>
-            </Button>
+          <Button size="sm" variant="outline" className="gap-1">
+            <ListFilter className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
+          </Button>
+          <Button size="sm" className="gap-1" onClick={() => setShowForm(true)}>
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">New Article</span>
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Table>
           <TableHeader>
             <TableRow>

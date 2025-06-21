@@ -3,11 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { Footer } from '@/components/news/Footer';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
+import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
+  const [breakingNews, setBreakingNews] = useState<any[]>([]);
   const [showNewsletterPopup, setShowNewsletterPopup] = useState(false);
+  const { language } = useLanguage();
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -15,6 +19,18 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
       setCategories(catData || []);
       const { data: stateData } = await supabase.from('states').select('*').order('name');
       setStates(stateData || []);
+      
+      const { data: articles, error } = await supabase
+        .from('articles')
+        .select('*')
+        .eq('is_breaking', true)
+        .order('published_at', { ascending: false })
+        .limit(10);
+      if (error) {
+        console.error("Error fetching breaking news:", error);
+      } else {
+        setBreakingNews(articles);
+      }
     };
     fetchSharedData();
   }, []);
@@ -36,7 +52,12 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <NewsHeader categories={categories} states={states} />
+      <NewsHeader 
+        categories={categories} 
+        states={states}
+        breakingNews={breakingNews}
+        language={language}
+      />
       <main className="flex-1">
         {children}
       </main>

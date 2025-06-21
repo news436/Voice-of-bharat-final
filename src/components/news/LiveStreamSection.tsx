@@ -24,17 +24,17 @@ export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {streams.map((stream) => (
           <Link to={`/live/${stream.id}`} key={stream.id}>
-          <Card className="hover:shadow-2xl transition-shadow border-black h-full">
-            <CardContent className="p-4">
+          <Card className="hover:shadow-2xl transition-shadow h-full border border-gray-200 dark:border-gray-700">
+            <CardContent className="p-0">
               <div className="relative">
                 {stream.thumbnail_url ? (
                   <img
                     src={stream.thumbnail_url}
                     alt={stream.title}
-                    className="w-full h-48 object-cover rounded-2xl"
+                    className="w-full h-48 object-cover"
                   />
                 ) : (
-                  <div className="w-full h-48 bg-gray-100 dark:bg-gray-900 rounded-2xl flex items-center justify-center">
+                  <div className="w-full h-48 bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
                     <Radio className="h-12 w-12 text-black dark:text-white" />
                   </div>
                 )}
@@ -45,7 +45,7 @@ export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
                   </Badge>
                 </div>
               </div>
-              <div className="mt-4 space-y-3">
+              <div className="p-4 mt-0 space-y-3">
                 <h3 className="font-semibold text-lg line-clamp-2 text-black dark:text-white">{stream.title}</h3>
                 {stream.description && (
                   <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{stream.description}</p>

@@ -32,16 +32,16 @@ export const VideoSection = ({ videos }: VideoSectionProps) => {
         {videos.slice(0, 6).map((video) => (
           <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-lg">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <CardContent className="p-[5px] flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col p-0">
                 <div className="relative">
                   {video.thumbnail_url && (
                     <img
                       src={video.thumbnail_url}
                       alt={video.title}
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="w-full h-48 object-cover"
                     />
                   )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
                     <div className="bg-red-600 rounded-full p-3">
                       <Play className="h-6 w-6 text-white fill-current" />
                     </div>
@@ -60,7 +60,7 @@ export const VideoSection = ({ videos }: VideoSectionProps) => {
                     </button>
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
+                <div className="p-4 space-y-2 flex-1 flex flex-col">
                   <h3 className="font-semibold line-clamp-2">{video.title}</h3>
                   <span className="block text-xs text-gray-500 mt-1 sm:hidden">{new Date(video.created_at).toLocaleDateString()}</span>
                   {video.description && (

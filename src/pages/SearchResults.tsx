@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Play } from 'lucide-react';
-import { NewsHeader } from '@/components/news/NewsHeader';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 function useQuery() {
@@ -18,20 +17,12 @@ const SearchResults = () => {
   const [articles, setArticles] = useState<any[]>([]);
   const [featuredArticles, setFeaturedArticles] = useState<any[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { language, t } = useLanguage();
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Fetch all categories for header
-      const { data: cats } = await supabase.from('categories').select('*').order('name');
-      setCategories(cats || []);
-      // Fetch all states for header
-      const { data: sts } = await supabase.from('states').select('*').order('name');
-      setStates(sts || []);
       // Featured articles: title OR summary OR title_hi OR summary_hi
       let featuredQuery = supabase
         .from('articles')
@@ -73,7 +64,6 @@ const SearchResults = () => {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black flex flex-col">
-      <NewsHeader categories={categories} states={states} />
       <main className="flex-1 container mx-auto px-4 py-6">
         <h1 className="text-3xl font-bold text-black dark:text-white mb-6">Search Results</h1>
         {loading ? (
@@ -94,15 +84,15 @@ const SearchResults = () => {
                     return (
                       <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
                         <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col">
-                          <CardContent className="p-4 flex-1 flex flex-col">
+                          <CardContent className="p-0 flex-1 flex flex-col">
                             {article.featured_image_url && (
                               <img
                                 src={article.featured_image_url}
                                 alt={title}
-                                className="w-full h-48 object-cover rounded-2xl mb-4"
+                                className="w-full h-48 object-cover"
                               />
                             )}
-                            <div className="space-y-2 flex-1 flex flex-col">
+                            <div className="p-4 space-y-2 flex-1 flex flex-col">
                               <div className="flex items-center space-x-2">
                                 {article.categories && (
                                   <Badge variant="outline" className="border-black text-black">
@@ -145,15 +135,15 @@ const SearchResults = () => {
                     return (
                       <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
                         <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col">
-                          <CardContent className="p-4 flex-1 flex flex-col">
+                          <CardContent className="p-0 flex-1 flex flex-col">
                             {article.featured_image_url && (
                               <img
                                 src={article.featured_image_url}
                                 alt={title}
-                                className="w-full h-48 object-cover rounded-2xl mb-4"
+                                className="w-full h-48 object-cover"
                               />
                             )}
-                            <div className="space-y-2 flex-1 flex flex-col">
+                            <div className="p-4 space-y-2 flex-1 flex flex-col">
                               <div className="flex items-center space-x-2">
                                 {article.categories && (
                                   <Badge variant="outline" className="border-black text-black">
@@ -191,15 +181,15 @@ const SearchResults = () => {
                   {videos.map((video) => (
                     <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
                       <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col">
-                        <CardContent className="p-4 flex-1 flex flex-col">
+                        <CardContent className="p-0 flex-1 flex flex-col">
                           {video.thumbnail_url && (
                             <img
                               src={video.thumbnail_url}
                               alt={video.title}
-                              className="w-full h-48 object-cover rounded-2xl mb-4"
+                              className="w-full h-48 object-cover"
                             />
                           )}
-                          <div className="space-y-2 flex-1 flex flex-col">
+                          <div className="p-4 space-y-2 flex-1 flex flex-col">
                             <div className="flex items-center space-x-2">
                               {video.categories && (
                                 <Badge variant="outline" className="border-black text-black">
@@ -236,66 +226,8 @@ const SearchResults = () => {
           </>
         )}
       </main>
-      <Footer categories={categories} />
     </div>
   );
 };
-
-function Footer({ categories }: { categories: any[] }) {
-  const { language, t } = useLanguage();
-  return (
-    <footer className="bg-gray-900 text-white py-12 mt-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-red-400">Voice Of Bharat</h3>
-            <p className="text-gray-300">
-              Your trusted source for latest news and updates from across India.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">{t('quick_links')}</h4>
-            <div className="space-y-2">
-              <Link to="/about" className="block text-gray-300 hover:text-white">{t('about_us')}</Link>
-              <Link to="/contact" className="block text-gray-300 hover:text-white">{t('contact')}</Link>
-              <Link to="/privacy" className="block text-gray-300 hover:text-white">{t('privacy_policy')}</Link>
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">{t('categories')}</h4>
-            <div className="space-y-2">
-              {categories.slice(0, 5).map((category) => {
-                const name = language === 'hi' && category.name_hi ? category.name_hi : category.name;
-                return (
-                  <Link
-                    key={category.id}
-                    to={`/category/${category.slug}`}
-                    className="block text-gray-300 hover:text-white"
-                  >
-                    {name}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">{t('connect')}</h4>
-            <div className="space-y-2">
-              <a href="#" className="block text-gray-300 hover:text-white">{t('facebook')}</a>
-              <a href="#" className="block text-gray-300 hover:text-white">{t('twitter')}</a>
-              <a href="#" className="block text-gray-300 hover:text-white">{t('youtube')}</a>
-              <a href="#" className="block text-gray-300 hover:text-white">{t('instagram')}</a>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
-          <p className="text-gray-300">
-            © 2024 Voice Of Bharat. All rights reserved.
-          </p>
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 export default SearchResults; 

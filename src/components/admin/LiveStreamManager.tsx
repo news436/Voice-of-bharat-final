@@ -157,7 +157,7 @@ export const LiveStreamManager = () => {
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Add Stream</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <Table>
           <TableHeader>
             <TableRow>
