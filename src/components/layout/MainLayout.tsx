@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { NewsHeader } from '@/components/news/NewsHeader';
 import { Footer } from '@/components/news/Footer';
 import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SupportUsCta } from '../news/SupportUsCta';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -12,6 +14,7 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [breakingNews, setBreakingNews] = useState<any[]>([]);
   const [showNewsletterPopup, setShowNewsletterPopup] = useState(false);
   const { language } = useLanguage();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -57,10 +60,12 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
         states={states}
         breakingNews={breakingNews}
         language={language}
+        pathname={location.pathname}
       />
       <main className="flex-1">
         {children}
       </main>
+      {location.pathname !== '/support-us' && <SupportUsCta />}
       <Footer categories={categories} />
       {showNewsletterPopup && <NewsletterSignup onClose={handleClosePopup} />}
     </div>

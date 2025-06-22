@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Play } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AdSlot } from '@/components/news/AdSlot';
 
 const StatePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -76,12 +77,13 @@ const StatePage = () => {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-black/95">
-      <main className="max-w-7xl mx-auto px-2 sm:px-6 py-8">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-black dark:text-white mb-10 flex items-center gap-2">
-          <span className="block w-2 h-8 bg-red-600 rounded-full mr-2" />
-          {state.name} {t('news_articles')} & {t('videos')}
-        </h1>
+    <div className="bg-white dark:bg-black">
+      <main className="container mx-auto px-4 py-8">
+        {/* Ad Slot 5 - State pages top banner */}
+        <div className="mb-6">
+          <AdSlot slotNumber={5} />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">
@@ -134,25 +136,29 @@ const StatePage = () => {
                 </div>
               )}
             </section>
+
             {/* Videos */}
-            <section>
-              <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                {t('videos')}
-              </h2>
-              {videos.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-300">No videos found for this state.</p>
-              ) : (
+            {videos.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
+                  {t('videos')}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {videos.map((video) => (
-                    <a key={video.id} href={video.video_url} target="_blank" rel="noopener noreferrer" className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl">
+                    <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl">
                       <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-black/90">
                         <CardContent className="p-0 flex-1 flex flex-col">
                           {video.thumbnail_url && (
-                            <img
-                              src={video.thumbnail_url}
-                              alt={video.title}
-                              className="w-full h-48 object-cover rounded-t-2xl"
-                            />
+                            <div className="relative">
+                              <img
+                                src={video.thumbnail_url}
+                                alt={video.title}
+                                className="w-full h-48 object-cover rounded-t-2xl"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-t-2xl">
+                                <Play className="h-12 w-12 text-white" />
+                              </div>
+                            </div>
                           )}
                           <div className="space-y-2 flex-1 flex flex-col p-4">
                             <div className="flex items-center space-x-2">
@@ -161,7 +167,6 @@ const StatePage = () => {
                                   {video.categories.name}
                                 </Badge>
                               )}
-                              <Badge className="bg-red-600 text-white capitalize">{video.video_type}</Badge>
                             </div>
                             <h3 className="font-semibold leading-tight line-clamp-2 text-black dark:text-white">
                               {video.title}
@@ -169,68 +174,67 @@ const StatePage = () => {
                             {video.description && (
                               <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{video.description}</p>
                             )}
-                            <div className="flex items-center text-sm text-gray-500 mt-auto">
-                              <Play className="h-4 w-4 mr-1" />
-                              <span>{new Date(video.created_at).toLocaleDateString()}</span>
-                            </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </a>
+                    </Link>
                   ))}
                 </div>
-              )}
-            </section>
+              </section>
+            )}
           </div>
+
           {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Categories */}
-            <Card className="bg-white dark:bg-black rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
+          <div className="lg:col-span-1 space-y-6">
+            {/* State Info */}
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
               <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-black dark:text-white">
-                  <span className="block w-2 h-6 bg-red-600 rounded-full mr-2" />
-                  {t('categories')}
+                <h3 className="text-xl font-bold text-black dark:text-white mb-4">
+                  {language === 'hi' && state.name_hi ? state.name_hi : state.name}
                 </h3>
-                <div className="space-y-2">
-                  {categories.map((category) => {
-                    const name = language === 'hi' && category.name_hi ? category.name_hi : category.name;
-                    return (
-                      <Link
-                        key={category.id}
-                        to={`/category/${category.slug}`}
-                        className="block font-bold text-black dark:text-white px-4 py-2 rounded-xl transition-all border-l-4 border-transparent hover:border-red-600 hover:bg-red-50 dark:hover:bg-gray-900 hover:text-red-700 dark:hover:text-red-400"
-                      >
-                        {name}
-                      </Link>
-                    );
-                  })}
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                  {language === 'hi' && state.description_hi ? state.description_hi : state.description}
+                </p>
+                <div className="text-sm text-gray-500">
+                  <p><strong>Articles:</strong> {articles.length}</p>
+                  <p><strong>Videos:</strong> {videos.length}</p>
                 </div>
               </CardContent>
             </Card>
-            {/* States */}
-            <Card className="bg-white dark:bg-black rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-black dark:text-white">
-                  <span className="block w-2 h-6 bg-red-600 rounded-full mr-2" />
-                  {t('states')}
-                </h3>
-                <div className="space-y-2">
-                  {states.map((s) => {
-                    const name = language === 'hi' && s.name_hi ? s.name_hi : s.name;
-                    return (
-                      <Link
-                        key={s.id}
-                        to={`/state/${s.slug}`}
-                        className={`block font-bold text-black dark:text-white px-4 py-2 rounded-xl transition-all border-l-4 border-transparent hover:border-red-600 hover:bg-red-50 dark:hover:bg-gray-900 hover:text-red-700 dark:hover:text-red-400${s.id === state.id ? ' bg-red-50 dark:bg-gray-900 font-bold text-red-700 dark:text-red-400 border-red-600' : ''}`}
-                      >
-                        {name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+
+            {/* Other States */}
+            {states.length > 1 && (
+              <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-bold text-black dark:text-white mb-4">{t('other_states')}</h3>
+                  <div className="space-y-2">
+                    {states
+                      .filter(s => s.id !== state.id)
+                      .slice(0, 5)
+                      .map((otherState) => (
+                        <Link
+                          key={otherState.id}
+                          to={`/state/${otherState.slug}`}
+                          className="block text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        >
+                          {language === 'hi' && otherState.name_hi ? otherState.name_hi : otherState.name}
+                        </Link>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Ad Slot 6 - State pages sidebar */}
+            <div>
+              <AdSlot slotNumber={6} />
+            </div>
           </div>
+        </div>
+        
+        {/* Ad Slot 7 - State pages bottom banner */}
+        <div className="mt-8">
+          <AdSlot slotNumber={7} />
         </div>
       </main>
     </div>

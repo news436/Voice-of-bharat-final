@@ -12,9 +12,10 @@ import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import { StateManager } from '@/components/admin/StateManager';
 import { AdManager } from '@/components/admin/AdManager';
 import { AboutUsManager } from '@/components/admin/AboutUsManager';
+import SupportDetailsManager from '@/components/admin/SupportDetailsManager';
 import { toast } from '@/hooks/use-toast';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -106,6 +107,8 @@ const Admin = () => {
         return <AdManager />;
       case 'about':
         return <AboutUsManager />;
+      case 'support':
+        return <SupportDetailsManager />;
       default:
         return <AdminDashboard onQuickAction={handleSectionChange} userProfile={userProfile} />;
     }

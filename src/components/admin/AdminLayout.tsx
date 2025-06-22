@@ -15,6 +15,7 @@ import {
   LogOut,
   Users,
   Info,
+  Heart,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -82,8 +83,8 @@ export const AdminLayout = ({
     { id: 'videos' as AdminSection, label: 'Videos', icon: Video },
     { id: 'live' as AdminSection, label: 'Live Streams', icon: Radio },
     { id: 'admanager' as AdminSection, label: 'Ad Manager', icon: BarChart3 },
-    { id: 'analytics' as AdminSection, label: 'Analytics', icon: LineChart },
     { id: 'about' as AdminSection, label: 'About Us', icon: Info },
+    { id: 'support' as AdminSection, label: 'Support Details', icon: Heart },
   ];
   
   const SidebarContent = () => (
@@ -93,33 +94,6 @@ export const AdminLayout = ({
           <NavLink key={item.id} {...item} activeSection={activeSection} onSectionChange={onSectionChange} isCollapsed={isCollapsed} />
         ))}
       </div>
-       <div className="mt-auto p-4 border-t">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={`w-full ${isCollapsed ? 'justify-center' : 'justify-start'} p-2`}>
-                <div className="flex items-center gap-2">
-                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                     <Users className="h-5 w-5 text-muted-foreground" />
-                   </div>
-                   {!isCollapsed && (
-                      <div className="text-left">
-                         <p className="text-sm font-medium">{userProfile?.full_name || user?.email}</p>
-                         <p className="text-xs text-muted-foreground capitalize">{userProfile?.role}</p>
-                      </div>
-                   )}
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-       </div>
     </div>
   );
 
@@ -167,13 +141,16 @@ export const AdminLayout = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="overflow-hidden rounded-full">
-                <Bell className="h-5 w-5" />
+                <Users className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuLabel>{userProfile?.full_name || user?.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>No new notifications</DropdownMenuItem>
+              <DropdownMenuItem onClick={onSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

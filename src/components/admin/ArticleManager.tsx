@@ -54,6 +54,7 @@ type ArticleFormData = {
   meta_title: string;
   meta_description: string;
   meta_keywords: string;
+  publisher_name: string;
 };
 
 export const ArticleManager = () => {
@@ -66,7 +67,8 @@ export const ArticleManager = () => {
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
     featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
-    category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: ''
+    category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
+    publisher_name: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -175,7 +177,8 @@ export const ArticleManager = () => {
       is_breaking: article.is_breaking || false, is_featured: article.is_featured || false,
       category_id: article.category_id || '', state_id: article.state_id || '',
       meta_title: article.meta_title || '', meta_description: article.meta_description || '',
-      meta_keywords: article.meta_keywords || ''
+      meta_keywords: article.meta_keywords || '',
+      publisher_name: article.publisher_name || article.profiles?.full_name || ''
     });
     setShowForm(true);
     setImageFile(null);
@@ -196,7 +199,8 @@ export const ArticleManager = () => {
     setFormData({
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
-      category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: ''
+      category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
+      publisher_name: ''
     });
     setImageFile(null);
     setImagePreview(null);
@@ -208,7 +212,8 @@ export const ArticleManager = () => {
     setFormData({
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
-      category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: ''
+      category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
+      publisher_name: ''
     });
   };
 
@@ -307,15 +312,28 @@ export const ArticleManager = () => {
                   <CardHeader><CardTitle>Publishing</CardTitle></CardHeader>
                   <CardContent className="space-y-6 p-6">
                      <div className="space-y-2">
+                        <Label htmlFor="publisher_name">Publisher Name</Label>
+                        <Input 
+                          id="publisher_name" 
+                          placeholder="Enter publisher/author name" 
+                          value={formData.publisher_name} 
+                          onChange={e => setFormData({...formData, publisher_name: e.target.value})} 
+                        />
+                        <p className="text-xs text-muted-foreground">This name will be displayed as the author on the article page.</p>
+                     </div>
+                     <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
-                        <Select 
-                            value={formData.status} 
-                            onValueChange={status => setFormData({ ...formData, status: status as 'draft' | 'published' | 'archived' })}
+                        <Select
+                          value={formData.status}
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as 'draft' | 'published' | 'archived' }))}
                         >
-                          <SelectTrigger id="status"><SelectValue placeholder="Set status" /></SelectTrigger>
+                          <SelectTrigger id="status" aria-label="Select status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
                           <SelectContent>
-                             <SelectItem value="draft">Draft</SelectItem>
-                             <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="published">Published</SelectItem>
+                            <SelectItem value="archived">Archived</SelectItem>
                           </SelectContent>
                         </Select>
                      </div>
@@ -378,23 +396,6 @@ export const ArticleManager = () => {
                         />
                         <p className="text-xs text-muted-foreground">Upload an image to set it as the featured image.</p>
                       </div>
-                  </CardContent>
-               </Card>
-               <Card>
-                  <CardHeader><CardTitle>SEO Optimization</CardTitle></CardHeader>
-                  <CardContent className="space-y-6 p-6">
-                     <div>
-                        <Label htmlFor="meta_title">Meta Title</Label>
-                        <Input id="meta_title" placeholder="Enter meta title" value={formData.meta_title} onChange={e => setFormData({...formData, meta_title: e.target.value})} />
-                     </div>
-                     <div>
-                        <Label htmlFor="meta_description">Meta Description</Label>
-                        <Textarea id="meta_description" placeholder="Enter meta description" value={formData.meta_description} onChange={e => setFormData({...formData, meta_description: e.target.value})} />
-                     </div>
-                     <div>
-                        <Label htmlFor="meta_keywords">Meta Keywords</Label>
-                        <Input id="meta_keywords" placeholder="e.g., news, politics, tech" value={formData.meta_keywords} onChange={e => setFormData({...formData, meta_keywords: e.target.value})} />
-                     </div>
                   </CardContent>
                </Card>
             </div>

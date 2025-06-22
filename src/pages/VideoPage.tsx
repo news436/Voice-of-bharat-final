@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import VideoPlayer from "@/components/news/VideoPlayer";
 import { Button } from "@/components/ui/button";
+import { AdSlot } from "@/components/news/AdSlot";
 
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -101,6 +102,11 @@ const VideoPage = () => {
 
     return (
       <main className="container mx-auto px-4 py-8">
+        {/* Ad Slot 5 - Video pages top banner */}
+        <div className="mb-6">
+          <AdSlot slotNumber={5} />
+        </div>
+        
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <VideoPlayer video={video} />
@@ -136,7 +142,17 @@ const VideoPage = () => {
                 </Link>
               ))}
             </div>
+            
+            {/* Ad Slot 6 - Video pages sidebar */}
+            <div className="mt-6">
+              <AdSlot slotNumber={6} />
+            </div>
           </aside>
+        </div>
+        
+        {/* Ad Slot 7 - Video pages bottom banner */}
+        <div className="mt-8">
+          <AdSlot slotNumber={7} />
         </div>
       </main>
     );
@@ -145,6 +161,11 @@ const VideoPage = () => {
   // All Videos View
   return (
     <main className="container mx-auto flex-1 px-4 py-6">
+      {/* Ad Slot 5 - Video pages top banner */}
+      <div className="mb-6">
+        <AdSlot slotNumber={5} />
+      </div>
+      
       <h1 className="mb-8 text-3xl font-bold text-red-600">
         {t("all_videos")}
       </h1>
@@ -174,6 +195,7 @@ const VideoPage = () => {
           </SelectContent>
         </Select>
       </div>
+      
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {videos.map((video) => (
           <Card
@@ -182,8 +204,6 @@ const VideoPage = () => {
           >
             <CardContent className="p-4">
               <Link to={`/video/${video.id}`}>
-                {" "}
-                {/* Link to individual video page if needed */}
                 {video.thumbnail_url && (
                   <img
                     src={video.thumbnail_url}
@@ -207,8 +227,13 @@ const VideoPage = () => {
           </Card>
         ))}
       </div>
+      
+      {/* Ad Slot 7 - Video pages bottom banner */}
+      <div className="mt-8">
+        <AdSlot slotNumber={7} />
+      </div>
     </main>
   );
 };
 
-export default VideoPage; 
+export default VideoPage;

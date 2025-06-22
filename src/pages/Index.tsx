@@ -14,6 +14,7 @@ import { FeaturedArticles } from '@/components/news/FeaturedArticles';
 import { Calendar } from 'lucide-react';
 import { AdSlot } from '@/components/news/AdSlot';
 import { AboutUsSection } from '@/components/news/AboutUsSection';
+import { NewsletterSection } from '@/components/news/NewsletterSection';
 
 const Index = () => {
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
@@ -121,8 +122,15 @@ const Index = () => {
                <div><WeatherReport /></div>
                <div><StockWidget /></div>
                <div><AdSlot slotNumber={1} /></div>
+               {/* Ad Slot 6 - Homepage sidebar */}
+               <div><AdSlot slotNumber={6} /></div>
              </div>
           </div>
+        </div>
+
+        {/* Ad Slot 5 - Above Latest News */}
+        <div className="mb-6">
+          <AdSlot slotNumber={5} />
         </div>
 
               <section className="mb-12">
@@ -193,7 +201,13 @@ const Index = () => {
           <VideoSection videos={videos} />
         )}
         
+        {/* Ad Slot 7 - Above About Us section */}
+        <div className="my-6">
+          <AdSlot slotNumber={7} />
+        </div>
+        
         <AboutUsSection />
+        <NewsletterSection />
       </main>
     </div>
   );

@@ -57,6 +57,7 @@ export type Database = {
           id: string
           is_breaking: boolean
           is_featured: boolean
+          is_live: boolean
           meta_description: string | null
           meta_keywords: string | null
           meta_title: string | null
@@ -77,6 +78,7 @@ export type Database = {
           id?: string
           is_breaking?: boolean
           is_featured?: boolean
+          is_live?: boolean
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           id?: string
           is_breaking?: boolean
           is_featured?: boolean
+          is_live?: boolean
           meta_description?: string | null
           meta_keywords?: string | null
           meta_title?: string | null
@@ -339,6 +342,9 @@ export type Database = {
           slot_number: number;
           html_code: string | null;
           enabled: boolean;
+          image_url: string | null;
+          redirect_url: string | null;
+          ad_type: string;
           created_at: string;
           updated_at: string;
         };
@@ -347,6 +353,9 @@ export type Database = {
           slot_number: number;
           html_code?: string | null;
           enabled?: boolean;
+          image_url?: string | null;
+          redirect_url?: string | null;
+          ad_type?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -355,6 +364,39 @@ export type Database = {
           slot_number?: number;
           html_code?: string | null;
           enabled?: boolean;
+          image_url?: string | null;
+          redirect_url?: string | null;
+          ad_type?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      },
+      about_us: {
+        Row: {
+          id: string;
+          short_description: string | null;
+          detailed_content: string | null;
+          hero_image_url: string | null;
+          team_image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          short_description?: string | null;
+          detailed_content?: string | null;
+          hero_image_url?: string | null;
+          team_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          short_description?: string | null;
+          detailed_content?: string | null;
+          hero_image_url?: string | null;
+          team_image_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
