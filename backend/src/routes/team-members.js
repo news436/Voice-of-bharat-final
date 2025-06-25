@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { supabase } from '../config/database.js';
+
 const router = express.Router();
-const { supabase } = require('../config/database');
 
 // Get all team members
 router.get('/', async (req, res) => {
