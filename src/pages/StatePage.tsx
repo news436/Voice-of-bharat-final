@@ -17,7 +17,19 @@ const StatePage = () => {
   const [states, setStates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showingAllIndia, setShowingAllIndia] = useState(false);
   const { language, t } = useLanguage();
+
+  function formatShortTimeAgo(dateString: string) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return date.toLocaleDateString();
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,11 +66,30 @@ const StatePage = () => {
         
         // Fetch videos for this state using API client
         const videosResponse = await apiClient.getVideos();
+        let stateVideos: any[] = [];
         if (videosResponse.success) {
-          const stateVideos = videosResponse.data.filter((video: any) => 
+          stateVideos = videosResponse.data.filter((video: any) => 
             video.state_id === stateResponse.data.id
           );
           setVideos(stateVideos);
+        }
+
+        // If no state-specific content, fetch all India news as fallback
+        if ((!articlesResponse.success || articlesResponse.data.length === 0) && 
+            (!videosResponse.success || stateVideos.length === 0)) {
+          setShowingAllIndia(true);
+          
+          // Fetch all India articles
+          const allIndiaArticlesResponse = await apiClient.getArticles({ limit: 20 });
+          if (allIndiaArticlesResponse.success) {
+            setArticles(allIndiaArticlesResponse.data);
+          }
+          
+          // Fetch all India videos
+          const allIndiaVideosResponse = await apiClient.getVideos();
+          if (allIndiaVideosResponse.success) {
+            setVideos(allIndiaVideosResponse.data.slice(0, 12)); // Limit to 12 videos
+          }
         }
       } catch (error) {
         console.error('Error fetching state data:', error);
@@ -104,44 +135,46 @@ const StatePage = () => {
             {/* Articles */}
             <section>
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                {t('news_articles')}
+                {showingAllIndia ? `${t('news_articles')} - All India` : `${t('news_articles')} - ${state.name}`}
               </h2>
+              {showingAllIndia && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <p className="text-blue-800 dark:text-blue-200 text-sm">
+                    No specific content found for {state.name}. Showing all India news instead.
+                  </p>
+                </div>
+              )}
               {articles.length === 0 ? (
                 <p className="text-gray-600 dark:text-gray-300">{t('no_articles_in_state')}</p>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {articles.map((article) => (
-                    <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl">
-                      <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-black/90">
-                        <CardContent className="p-0 flex-1 flex flex-col">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+                  {articles.map((article) => {
+                    const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
+                    return (
+                      <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-xl">
+                        <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
                           {article.featured_image_url && (
                             <img
                               src={article.featured_image_url}
-                              alt={article.title}
-                              className="w-full h-auto object-cover rounded-t-2xl"
+                              alt={title}
+                              className="w-full h-28 md:h-40 lg:h-48 object-cover"
                             />
                           )}
-                          <div className="space-y-2 flex-1 flex flex-col p-4">
-                            <div className="flex items-center space-x-2">
-                              {article.is_breaking && (
-                                <Badge variant="destructive">Breaking</Badge>
-                              )}
-                            </div>
-                            <h3 className="font-semibold leading-tight line-clamp-2 text-black dark:text-white">
-                              {article.title}
+                          <div className="p-3 flex-1 flex flex-col">
+                            <h3 className="font-bold text-sm mb-1 line-clamp-2 text-black dark:text-white">
+                              {title}
                             </h3>
-                            {article.summary && (
-                              <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{article.summary}</p>
-                            )}
-                            <div className="flex items-center text-sm text-gray-500 mt-auto">
-                              <Calendar className="h-4 w-4 mr-1" />
+                            <div className="flex items-center text-xs text-gray-500 mt-auto whitespace-nowrap overflow-hidden text-ellipsis">
+                              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
                               <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                              <span className="mx-1">·</span>
+                              <span>{formatShortTimeAgo(article.published_at)}</span>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -150,44 +183,41 @@ const StatePage = () => {
             {videos.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                {t('videos')}
+                {showingAllIndia ? `${t('videos')} - All India` : `${t('videos')} - ${state.name}`}
               </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {videos.map((video) => (
-                    <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl">
-                      <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-black/90">
-                        <CardContent className="p-0 flex-1 flex flex-col">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
+                  {videos.map((video) => {
+                    const title = language === 'hi' && video.title_hi ? video.title_hi : video.title;
+                    return (
+                      <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-xl">
+                        <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
                           {video.thumbnail_url && (
                             <div className="relative">
-                            <img
-                              src={video.thumbnail_url}
-                              alt={video.title}
-                              className="w-full h-auto object-cover rounded-t-2xl"
-                            />
-                              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-t-2xl">
-                                <Play className="h-12 w-12 text-white" />
+                              <img
+                                src={video.thumbnail_url}
+                                alt={title}
+                                className="w-full h-28 md:h-40 lg:h-48 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                                <Play className="h-8 w-8 text-white" />
                               </div>
                             </div>
                           )}
-                          <div className="space-y-2 flex-1 flex flex-col p-4">
-                            <div className="flex items-center space-x-2">
-                              {video.categories && (
-                                <Badge variant="outline" className="border-black text-black dark:border-white dark:text-white">
-                                  {video.categories.name}
-                                </Badge>
-                              )}
-                            </div>
-                            <h3 className="font-semibold leading-tight line-clamp-2 text-black dark:text-white">
-                              {video.title}
+                          <div className="p-3 flex-1 flex flex-col">
+                            <h3 className="font-bold text-sm mb-1 line-clamp-2 text-black dark:text-white">
+                              {title}
                             </h3>
-                            {video.description && (
-                              <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{video.description}</p>
-                            )}
+                            <div className="flex items-center text-xs text-gray-500 mt-auto whitespace-nowrap overflow-hidden text-ellipsis">
+                              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                              <span>{new Date(video.created_at).toLocaleDateString()}</span>
+                              <span className="mx-1">·</span>
+                              <span>{formatShortTimeAgo(video.created_at)}</span>
+                            </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
               )}
