@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Play } from 'lucide-react';
+import { Calendar, Play, MapPin, FileText, Video, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
 import apiClient from '@/utils/api';
@@ -17,7 +17,6 @@ const StatePage = () => {
   const [states, setStates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [showingAllIndia, setShowingAllIndia] = useState(false);
   const { language, t } = useLanguage();
 
   function formatShortTimeAgo(dateString: string) {
@@ -66,30 +65,11 @@ const StatePage = () => {
         
         // Fetch videos for this state using API client
         const videosResponse = await apiClient.getVideos();
-        let stateVideos: any[] = [];
         if (videosResponse.success) {
-          stateVideos = videosResponse.data.filter((video: any) => 
+          const stateVideos = videosResponse.data.filter((video: any) => 
             video.state_id === stateResponse.data.id
           );
           setVideos(stateVideos);
-        }
-
-        // If no state-specific content, fetch all India news as fallback
-        if ((!articlesResponse.success || articlesResponse.data.length === 0) && 
-            (!videosResponse.success || stateVideos.length === 0)) {
-          setShowingAllIndia(true);
-          
-          // Fetch all India articles
-          const allIndiaArticlesResponse = await apiClient.getArticles({ limit: 20 });
-          if (allIndiaArticlesResponse.success) {
-            setArticles(allIndiaArticlesResponse.data);
-          }
-          
-          // Fetch all India videos
-          const allIndiaVideosResponse = await apiClient.getVideos();
-          if (allIndiaVideosResponse.success) {
-            setVideos(allIndiaVideosResponse.data.slice(0, 12)); // Limit to 12 videos
-          }
         }
       } catch (error) {
         console.error('Error fetching state data:', error);
@@ -135,17 +115,18 @@ const StatePage = () => {
             {/* Articles */}
             <section>
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                {showingAllIndia ? `${t('news_articles')} - All India` : `${t('news_articles')} - ${state.name}`}
+                {t('news_articles')} - {state.name}
               </h2>
-              {showingAllIndia && (
-                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-blue-800 dark:text-blue-200 text-sm">
-                    No specific content found for {state.name}. Showing all India news instead.
+              {articles.length === 0 ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                    No Articles Available
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No articles are currently available for {state.name}.
                   </p>
                 </div>
-              )}
-              {articles.length === 0 ? (
-                <p className="text-gray-600 dark:text-gray-300">{t('no_articles_in_state')}</p>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                   {articles.map((article) => {
@@ -183,7 +164,7 @@ const StatePage = () => {
             {videos.length > 0 && (
             <section>
               <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                {showingAllIndia ? `${t('videos')} - All India` : `${t('videos')} - ${state.name}`}
+                {t('videos')} - {state.name}
               </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                   {videos.map((video) => {
@@ -228,41 +209,76 @@ const StatePage = () => {
             {/* State Info */}
             <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-black dark:text-white mb-4">
-                  {language === 'hi' && state.name_hi ? state.name_hi : state.name}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                  {language === 'hi' && state.description_hi ? state.description_hi : state.description}
-                </p>
-                <div className="text-sm text-gray-500">
-                  <p><strong>Articles:</strong> {articles.length}</p>
-                  <p><strong>Videos:</strong> {videos.length}</p>
+                <div className="flex items-center mb-4">
+                  <MapPin className="h-6 w-6 text-red-600 mr-3" />
+                  <h3 className="text-xl font-bold text-black dark:text-white">{state.name}</h3>
+                </div>
+                {state.description && (
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                    {state.description}
+                  </p>
+                )}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center">
+                      <FileText className="h-5 w-5 text-blue-600 mr-2" />
+                      <span className="text-sm font-medium text-black dark:text-white">Articles</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                      {articles.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center">
+                      <Video className="h-5 w-5 text-red-600 mr-2" />
+                      <span className="text-sm font-medium text-black dark:text-white">Videos</span>
+                    </div>
+                    <Badge variant="secondary" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                      {videos.length}
+                    </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Other States */}
-            {states.length > 1 && (
-              <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
+            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
               <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-black dark:text-white mb-4">{t('other_states')}</h3>
-                <div className="space-y-2">
-                    {states
-                      .filter(s => s.id !== state.id)
-                      .slice(0, 5)
-                      .map((otherState) => (
-                      <Link
-                          key={otherState.id}
-                          to={`/state/${otherState.slug}`}
-                          className="block text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                        >
-                          {language === 'hi' && otherState.name_hi ? otherState.name_hi : otherState.name}
-                      </Link>
-                      ))}
+                <h3 className="text-lg font-bold text-black dark:text-white mb-4 flex items-center">
+                  <MapPin className="h-5 w-5 text-gray-600 mr-2" />
+                  Other States
+                </h3>
+                <div className="space-y-3">
+                  {states.slice(0, 8).map((otherState) => (
+                    <Link 
+                      key={otherState.id} 
+                      to={`/state/${otherState.slug}`}
+                      className={`block p-3 rounded-lg border transition-all hover:shadow-md ${
+                        otherState.slug === slug 
+                          ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' 
+                          : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 text-gray-500 mr-2" />
+                          <span className={`text-sm font-medium ${
+                            otherState.slug === slug 
+                              ? 'text-red-800 dark:text-red-200' 
+                              : 'text-black dark:text-white'
+                          }`}>
+                            {otherState.name}
+                          </span>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {otherState.slug === slug ? 'Current' : 'View'}
+                        </Badge>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-            )}
 
             {/* Ad Slot 6 - State pages sidebar */}
             <div>
