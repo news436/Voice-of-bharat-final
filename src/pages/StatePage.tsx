@@ -36,7 +36,7 @@ const StatePage = () => {
         }
 
         // Fetch specific state using API client
-        const stateResponse = await apiClient.get(`/states/slug/${slug}`);
+        const stateResponse = await apiClient.get(`/states/${slug}`);
         if (!stateResponse.success || !stateResponse.data) {
           setNotFound(true);
           setLoading(false);

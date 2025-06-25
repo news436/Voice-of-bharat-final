@@ -20,7 +20,7 @@ const CategoryPage = () => {
       
       try {
         // Fetch category using API client
-        const categoryResponse = await apiClient.get(`/categories/slug/${slug}`);
+        const categoryResponse = await apiClient.get(`/categories/${slug}`);
         if (!categoryResponse.success || !categoryResponse.data) {
           setLoading(false);
           return;
