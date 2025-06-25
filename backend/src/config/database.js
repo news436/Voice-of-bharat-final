@@ -18,19 +18,23 @@ export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
-// Direct PostgreSQL connection (alternative)
+// Direct PostgreSQL connection (alternative) - only if explicitly configured
 let pool = null;
 
-if (process.env.DATABASE_URL) {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    },
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  });
+if (process.env.DATABASE_URL && process.env.USE_DIRECT_DB === 'true') {
+  try {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      },
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+  } catch (error) {
+    console.warn('⚠️ Direct PostgreSQL pool creation failed:', error.message);
+  }
 }
 
 export const db = pool;
@@ -38,25 +42,34 @@ export const db = pool;
 // Test database connection
 export const testConnection = async () => {
   try {
-    // Test Supabase connection
+    // Always test Supabase connection first
+    console.log('🔍 Testing Supabase connection...');
     const { data, error } = await supabase
       .from('articles')
       .select('count')
       .limit(1);
     
     if (error) {
-      console.error('Supabase connection error:', error);
+      console.error('❌ Supabase connection error:', error);
       return false;
     }
     
     console.log('✅ Supabase connection successful');
     
-    // Test direct PostgreSQL connection if available
-    if (pool) {
-      const client = await pool.connect();
-      await client.query('SELECT NOW()');
-      client.release();
-      console.log('✅ Direct PostgreSQL connection successful');
+    // Only test direct PostgreSQL if explicitly enabled and pool exists
+    if (pool && process.env.USE_DIRECT_DB === 'true') {
+      console.log('🔍 Testing direct PostgreSQL connection...');
+      try {
+        const client = await pool.connect();
+        await client.query('SELECT NOW()');
+        client.release();
+        console.log('✅ Direct PostgreSQL connection successful');
+      } catch (pgError) {
+        console.warn('⚠️ Direct PostgreSQL connection failed:', pgError.message);
+        console.log('ℹ️ Continuing with Supabase connection only');
+      }
+    } else {
+      console.log('ℹ️ Direct PostgreSQL not configured, using Supabase only');
     }
     
     return true;
@@ -80,7 +93,7 @@ export const healthCheck = async () => {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       supabase: 'connected',
-      postgres: pool ? 'available' : 'not_configured'
+      postgres: pool && process.env.USE_DIRECT_DB === 'true' ? 'available' : 'not_configured'
     };
   } catch (error) {
     return {

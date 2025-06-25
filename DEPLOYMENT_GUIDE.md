@@ -54,7 +54,13 @@ JWT_SECRET=your_random_secret_key_here
 CORS_ORIGIN=*
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+USE_DIRECT_DB=false
 ```
+
+**Important Notes:**
+- **Supabase credentials are REQUIRED** - Get these from your Supabase dashboard
+- **DATABASE_URL is OPTIONAL** - Only needed if you want direct PostgreSQL access
+- **USE_DIRECT_DB=false** - Set to true only if you want to use direct PostgreSQL connection
 
 ### 2.4 Deploy
 
@@ -80,7 +86,7 @@ curl https://your-app.onrender.com/api/health
   "status": "healthy",
   "timestamp": "2024-01-20T10:30:00.000Z",
   "supabase": "connected",
-  "postgres": "available"
+  "postgres": "not_configured"
 }
 ```
 
@@ -209,6 +215,7 @@ Monitor your application logs:
 - ✅ Check Supabase credentials in environment variables
 - ✅ Verify Supabase project is active
 - ✅ Ensure service role key has proper permissions
+- ✅ Remove DATABASE_URL if you're not using direct PostgreSQL
 
 #### 2. CORS Errors
 
@@ -318,4 +325,4 @@ If you encounter issues:
 4. **Check Supabase dashboard** for database issues
 5. **Review this guide** for common solutions
 
-Your backend should now be successfully deployed and connected to Supabase! 🎉 
+Your backend should now be successfully deployed and connected to Supabase! 🎉
