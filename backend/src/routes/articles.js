@@ -52,6 +52,72 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get breaking news articles
+router.get('/breaking', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        categories(name, slug),
+        states(name),
+        profiles(full_name, avatar_url)
+      `)
+      .eq('is_breaking', true)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(parseInt(limit));
+    
+    if (error) throw error;
+    
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('Error fetching breaking news:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch breaking news'
+    });
+  }
+});
+
+// Get featured articles
+router.get('/featured', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        categories(name, slug),
+        states(name),
+        profiles(full_name, avatar_url)
+      `)
+      .eq('is_featured', true)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(parseInt(limit));
+    
+    if (error) throw error;
+    
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('Error fetching featured articles:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch featured articles'
+    });
+  }
+});
+
 // Get article by slug
 router.get('/:slug', async (req, res) => {
   try {
