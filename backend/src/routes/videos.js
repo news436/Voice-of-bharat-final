@@ -187,4 +187,126 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Create new video
+router.post('/', async (req, res) => {
+  try {
+    const {
+      title,
+      title_hi,
+      description,
+      description_hi,
+      video_url,
+      video_type = 'youtube',
+      thumbnail_url,
+      category_id,
+      state_id,
+      is_featured = false,
+      duration,
+      views = 0
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !video_url) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and video URL are required'
+      });
+    }
+
+    const videoData = {
+      title,
+      title_hi,
+      description,
+      description_hi,
+      video_url,
+      video_type,
+      thumbnail_url,
+      category_id,
+      state_id,
+      is_featured,
+      duration,
+      views,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('videos')
+      .insert(videoData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+      message: 'Video created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating video:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create video'
+    });
+  }
+});
+
+// Update video
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('videos')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+      message: 'Video updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating video:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update video'
+    });
+  }
+});
+
+// Delete video
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('videos')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      message: 'Video deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting video:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete video'
+    });
+  }
+});
+
 export default router; 

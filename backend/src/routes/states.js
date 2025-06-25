@@ -170,4 +170,126 @@ router.get('/:slug/videos', async (req, res) => {
   }
 });
 
+// Create new state
+router.post('/', async (req, res) => {
+  try {
+    const { name, name_hi, description, description_hi, flag_url, capital } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: 'State name is required'
+      });
+    }
+
+    // Generate slug from name
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
+    const stateData = {
+      name,
+      name_hi,
+      description,
+      description_hi,
+      slug,
+      flag_url,
+      capital,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('states')
+      .insert(stateData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+      message: 'State created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating state:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create state'
+    });
+  }
+});
+
+// Update state
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+
+    // If name is being updated, regenerate slug
+    if (updateData.name) {
+      updateData.slug = updateData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+    }
+
+    const { data, error } = await supabase
+      .from('states')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+      message: 'State updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating state:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update state'
+    });
+  }
+});
+
+// Delete state
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('states')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      message: 'State deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting state:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete state'
+    });
+  }
+});
+
 export default router; 

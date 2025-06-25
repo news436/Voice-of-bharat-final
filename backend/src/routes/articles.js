@@ -255,4 +255,149 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Create new article
+router.post('/', async (req, res) => {
+  try {
+    const {
+      title,
+      title_hi,
+      content,
+      content_hi,
+      summary,
+      summary_hi,
+      category_id,
+      state_id,
+      featured_image_url,
+      video_url,
+      is_breaking = false,
+      is_featured = false,
+      status = 'draft',
+      author_id
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !content) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and content are required'
+      });
+    }
+
+    // Generate slug from title
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
+    const articleData = {
+      title,
+      title_hi,
+      content,
+      content_hi,
+      summary,
+      summary_hi,
+      slug,
+      category_id,
+      state_id,
+      featured_image_url,
+      video_url,
+      is_breaking,
+      is_featured,
+      status,
+      author_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // If status is published, set published_at
+    if (status === 'published') {
+      articleData.published_at = new Date().toISOString();
+    }
+
+    const { data, error } = await supabase
+      .from('articles')
+      .insert(articleData)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+      message: 'Article created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating article:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create article'
+    });
+  }
+});
+
+// Update article
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = {
+      ...req.body,
+      updated_at: new Date().toISOString()
+    };
+
+    // If status is being changed to published, set published_at
+    if (updateData.status === 'published' && !updateData.published_at) {
+      updateData.published_at = new Date().toISOString();
+    }
+
+    const { data, error } = await supabase
+      .from('articles')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+      message: 'Article updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating article:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update article'
+    });
+  }
+});
+
+// Delete article
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      message: 'Article deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting article:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete article'
+    });
+  }
+});
+
 export default router; 
