@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
+import apiClient from '@/utils/api';
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -131,49 +132,41 @@ const ArticlePage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('articles')
-        .select(`*, categories(name, slug), states(name), profiles(full_name, avatar_url), title_hi, summary_hi, content_hi`)
-        .eq('slug', slug)
-        .single();
-      if (error || !data) {
-        setNotFound(true);
-        setLoading(false);
-        return;
-      }
-      setArticle(data);
-      
-      // Fetch related articles
       try {
-        const { data: relatedData, error: relatedError } = await supabase
-          .from('articles')
-          .select(`id, slug, title, title_hi, featured_image_url, published_at, categories(name, slug), profiles(full_name)`)
-          .eq('category_id', (data as any).category_id)
-          .neq('id', (data as any).id) // Exclude current article
-          .eq('status', 'published')
-          .order('published_at', { ascending: false });
-        
-        if (!relatedError && relatedData && relatedData.length > 0) {
-          setRelatedArticles(relatedData);
-        } else {
-          // Fallback: fetch recent articles if no related articles found
-          const { data: recentData, error: recentError } = await supabase
-            .from('articles')
-            .select(`id, slug, title, title_hi, featured_image_url, published_at, categories(name, slug), profiles(full_name)`)
-            .neq('id', (data as any).id) // Exclude current article
-            .eq('status', 'published')
-            .order('published_at', { ascending: false });
-          
-          if (!recentError && recentData) {
-            setRelatedArticles(recentData);
-          }
+        // Use API client to fetch article
+        const response = await apiClient.getArticle(slug);
+        if (!response.success || !response.data) {
+          setNotFound(true);
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error('Error fetching related articles:', err);
-        setRelatedArticles([]);
+        setArticle(response.data);
+        
+        // Fetch related articles using API client
+        try {
+          const relatedResponse = await apiClient.get(`/articles/${slug}/related?limit=5`);
+          if (relatedResponse.success && relatedResponse.data && relatedResponse.data.length > 0) {
+            setRelatedArticles(relatedResponse.data);
+          } else {
+            // Fallback: fetch recent articles if no related articles found
+            const recentResponse = await apiClient.getArticles({ 
+              limit: 5, 
+              exclude: response.data.id 
+            });
+            if (recentResponse.success && recentResponse.data) {
+              setRelatedArticles(recentResponse.data);
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching related articles:', err);
+          setRelatedArticles([]);
+        }
+      } catch (error) {
+        console.error('Error fetching article:', error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     fetchArticle();
   }, [slug]);

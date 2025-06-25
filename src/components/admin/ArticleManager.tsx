@@ -14,6 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { isValidYoutubeUrl, getYoutubeEmbedUrl } from '@/lib/youtube-utils';
+import apiClient from '@/utils/api';
 
 const ReactQuill = lazy(() =>
   import('react-quill').then(module => {
@@ -85,19 +86,23 @@ export const ArticleManager = () => {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      const [articlesRes, categoriesRes, statesRes] = await Promise.all([
-        supabase.from('articles').select('*, categories(name), profiles(full_name)').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('name'),
-        supabase.from('states').select('*').order('name')
-      ]);
+      // Fetch articles using API client
+      const articlesResponse = await apiClient.getArticles({ limit: 1000 });
+      if (articlesResponse.success) {
+        setArticles(articlesResponse.data);
+      }
 
-      if (articlesRes.error) throw articlesRes.error;
-      if (categoriesRes.error) throw categoriesRes.error;
-      if (statesRes.error) throw statesRes.error;
-      
-      setArticles(articlesRes.data);
-      setCategories(categoriesRes.data);
-      setStates(statesRes.data);
+      // Fetch categories using API client
+      const categoriesResponse = await apiClient.getCategories();
+      if (categoriesResponse.success) {
+        setCategories(categoriesResponse.data);
+      }
+
+      // Fetch states using API client
+      const statesResponse = await apiClient.getStates();
+      if (statesResponse.success) {
+        setStates(statesResponse.data);
+      }
     } catch (error: any) {
       toast({ title: "Error fetching data", description: error.message, variant: "destructive" });
     } finally {
@@ -135,26 +140,6 @@ export const ArticleManager = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate Hindi content since it's the default language
-    if (!formData.title_hi || !formData.summary_hi || !formData.content_hi) {
-      toast({ 
-        title: "Hindi Content Required", 
-        description: "Please provide Hindi title, summary, and content since Hindi is the default language.", 
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    // Validate YouTube URL if provided
-    if (formData.youtube_video_url && !isValidYoutubeUrl(formData.youtube_video_url)) {
-      toast({ 
-        title: "Invalid YouTube URL", 
-        description: "Please provide a valid YouTube URL (e.g., https://www.youtube.com/watch?v=...)", 
-        variant: "destructive" 
-      });
-      return;
-    }
-    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated.");
@@ -180,13 +165,19 @@ export const ArticleManager = () => {
       };
 
       if (editingArticle) {
-        const { error } = await supabase.from('articles').update(articleData).eq('id', editingArticle.id);
-        if (error) throw error;
-        toast({ title: "Success", description: "Article updated." });
+        const response = await apiClient.updateArticle(editingArticle.id, articleData);
+        if (response.success) {
+          toast({ title: "Success", description: "Article updated." });
+        } else {
+          throw new Error(response.error || 'Failed to update article');
+        }
       } else {
-        const { error } = await supabase.from('articles').insert([articleData]);
-        if (error) throw error;
-        toast({ title: "Success", description: "Article created." });
+        const response = await apiClient.createArticle(articleData);
+        if (response.success) {
+          toast({ title: "Success", description: "Article created." });
+        } else {
+          throw new Error(response.error || 'Failed to create article');
+        }
       }
       resetForm();
       fetchInitialData();
@@ -217,10 +208,13 @@ export const ArticleManager = () => {
   const handleDelete = async (articleId: string) => {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
     try {
-      const { error } = await supabase.from('articles').delete().eq('id', articleId);
-      if (error) throw error;
-      toast({ title: "Success", description: "Article deleted." });
-      fetchInitialData();
+      const response = await apiClient.deleteArticle(articleId);
+      if (response.success) {
+        toast({ title: "Success", description: "Article deleted." });
+        fetchInitialData();
+      } else {
+        throw new Error(response.error || 'Failed to delete article');
+      }
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }

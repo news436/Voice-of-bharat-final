@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { AboutUsManager } from './AboutUsManager';
+import apiClient from '@/utils/api';
 
 type AdminSection = "articles" | "categories" | "analytics";
 
@@ -50,26 +51,40 @@ export const AdminDashboard = ({
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const { data: articles } = await supabase.from('articles').select('status, is_breaking');
-        const { data: videos } = await supabase.from('videos').select('id');
-        const { data: streams } = await supabase.from('live_streams').select('is_active');
+        // Fetch articles for stats
+        const articlesResponse = await apiClient.getArticles({ limit: 1000 });
+        const articles = articlesResponse.success ? articlesResponse.data : [];
         
-        const totalArticles = articles?.length || 0;
-        const publishedArticles = articles?.filter(a => a.status === 'published').length || 0;
-        const draftArticles = articles?.filter(a => a.status === 'draft').length || 0;
-        const breakingNews = articles?.filter(a => a.is_breaking).length || 0;
-        const totalVideos = videos?.length || 0;
-        const activeStreams = streams?.filter(s => s.is_active).length || 0;
+        // Fetch videos for stats
+        const videosResponse = await apiClient.getVideos();
+        const videos = videosResponse.success ? videosResponse.data : [];
+        
+        // Fetch live streams for stats
+        const streamsResponse = await apiClient.getLiveStreams();
+        const streams = streamsResponse.success ? streamsResponse.data : [];
+        
+        const totalArticles = articles.length;
+        const publishedArticles = articles.filter((a: any) => a.status === 'published').length;
+        const draftArticles = articles.filter((a: any) => a.status === 'draft').length;
+        const breakingNews = articles.filter((a: any) => a.is_breaking).length;
+        const totalVideos = videos.length;
+        const activeStreams = streams.filter((s: any) => s.is_active).length;
 
-        setStats(prev => ({ ...prev, totalArticles, publishedArticles, draftArticles, breakingNews, totalVideos, activeStreams }));
+        setStats(prev => ({ 
+          ...prev, 
+          totalArticles, 
+          publishedArticles, 
+          draftArticles, 
+          breakingNews, 
+          totalVideos, 
+          activeStreams 
+        }));
 
-        const { data: recent } = await supabase
-          .from('articles')
-          .select('*, categories(name), profiles(full_name)')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        setRecentArticles(recent || []);
+        // Fetch recent articles
+        const recentResponse = await apiClient.getArticles({ limit: 5 });
+        if (recentResponse.success) {
+          setRecentArticles(recentResponse.data);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

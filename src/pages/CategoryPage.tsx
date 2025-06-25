@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
+import apiClient from '@/utils/api';
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -17,30 +18,27 @@ const CategoryPage = () => {
     const fetchCategoryData = async () => {
       setLoading(true);
       
-      const { data: catData, error: catError } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-      
-      if (catError || !catData) {
-        setLoading(false);
-        return;
-      }
-      setCategory(catData);
-      
-      const { data: articlesData, error: articlesError } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('category_id', catData.id)
-        .order('published_at', { ascending: false });
+      try {
+        // Fetch category using API client
+        const categoryResponse = await apiClient.get(`/categories/slug/${slug}`);
+        if (!categoryResponse.success || !categoryResponse.data) {
+          setLoading(false);
+          return;
+        }
+        setCategory(categoryResponse.data);
         
-      if (articlesError) {
+        // Fetch articles for this category using API client
+        const articlesResponse = await apiClient.getArticles({ 
+          category: categoryResponse.data.slug 
+        });
+        if (articlesResponse.success) {
+          setArticles(articlesResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching category data:', error);
+      } finally {
         setLoading(false);
-        return;
       }
-      setArticles(articlesData || []);
-      setLoading(false);
     };
     
     fetchCategoryData();

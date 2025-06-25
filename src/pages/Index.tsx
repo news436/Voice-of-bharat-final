@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
-import { LiveStreamSection } from '@/components/news/LiveStreamSection';
 import { Button } from '@/components/ui/button';
-import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
+import { Calendar, Clock, User, Play, Eye, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
+import { AdSlot } from '@/components/news/AdSlot';
+import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
+import { FeaturedArticles } from '@/components/news/FeaturedArticles';
 import { VideoSection } from '@/components/news/VideoSection';
+import { LiveStreamSection } from '@/components/news/LiveStreamSection';
+import apiClient from '@/utils/api';
 import WeatherReport from '@/components/news/WeatherReport';
 import StockWidget from '@/components/news/StockWidget';
-import { FeaturedArticles } from '@/components/news/FeaturedArticles';
-import { Calendar, Users } from 'lucide-react';
-import { AdSlot } from '@/components/news/AdSlot';
 import { AboutUsSection } from '@/components/news/AboutUsSection';
 import { NewsletterSection } from '@/components/news/NewsletterSection';
-import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 
 const Index = () => {
@@ -34,51 +35,59 @@ const Index = () => {
 
   const fetchRecentArticles = async (pageNum: number) => {
     setIsFetchingMore(true);
-    const { data: articlesData, error } = await supabase
-      .from('articles')
-      .select('*, categories(name, slug), profiles(full_name)')
-      .order('published_at', { ascending: false })
-      .range(pageNum * ARTICLES_PER_PAGE, (pageNum + 1) * ARTICLES_PER_PAGE - 1);
+    try {
+      const response = await apiClient.getArticles({
+        page: pageNum + 1,
+        limit: ARTICLES_PER_PAGE
+      });
 
-    if (error) {
-      console.error("Error fetching recent articles:", error);
-      setHasMore(false);
-    } else {
-      setRecentArticles(prev => pageNum === 0 ? articlesData : [...prev, ...articlesData]);
-      if (articlesData.length < ARTICLES_PER_PAGE) {
+      if (response.success) {
+        setRecentArticles(prev => pageNum === 0 ? response.data : [...prev, ...response.data]);
+        if (response.data.length < ARTICLES_PER_PAGE) {
+          setHasMore(false);
+        }
+      } else {
+        console.error("Error fetching recent articles:", response.error);
         setHasMore(false);
       }
+    } catch (error) {
+      console.error("Error fetching recent articles:", error);
+      setHasMore(false);
+    } finally {
+      setIsFetchingMore(false);
     }
-    setIsFetchingMore(false);
   };
 
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        const { data: allArticles, error } = await supabase
-        .from('articles')
-          .select('*, categories(name, slug), profiles(full_name)')
-          .order('published_at', { ascending: false });
+        // Fetch all articles to get featured ones
+        const allArticlesResponse = await apiClient.getArticles({ limit: 100 });
+        if (allArticlesResponse.success) {
+          const featured = allArticlesResponse.data.filter((a: any) => a.is_featured);
+          setFeaturedArticles(featured);
+          
+          fetchRecentArticles(0);
+        }
 
-        if (error) throw error;
-
-        const featured = allArticles.filter(a => a.is_featured);
-        setFeaturedArticles(featured);
+        // Fetch videos using API client
+        const videosResponse = await apiClient.getVideos();
+        if (videosResponse.success) {
+          setVideos(videosResponse.data.slice(0, 4)); // Limit to 4 videos
+        }
         
-        fetchRecentArticles(0);
+        // Fetch active live streams using API client
+        const streamsResponse = await apiClient.getActiveLiveStreams();
+        if (streamsResponse.success) {
+          setLiveStreams(streamsResponse.data);
+        }
 
-        const { data: videosData } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(4);
-        setVideos(videosData || []);
-        
-        const { data: streamsData } = await supabase.from('live_streams').select('*').eq('is_active', true);
-        setLiveStreams(streamsData || []);
-
-    } catch (error) {
+      } catch (error) {
         console.error("Error fetching page data:", error);
-    } finally {
-      setIsLoading(false);
-    }
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchInitialData();

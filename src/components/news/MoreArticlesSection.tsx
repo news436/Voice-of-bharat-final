@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, User } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import apiClient from '@/utils/api';
 
 interface MoreArticlesSectionProps {
   currentArticleId: string;
@@ -24,37 +25,19 @@ export const MoreArticlesSection = ({ currentArticleId, currentArticleSlug }: Mo
   const fetchMoreArticles = async (pageNum: number) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select(`
-          id, 
-          slug, 
-          title, 
-          title_hi, 
-          summary, 
-          summary_hi,
-          featured_image_url, 
-          published_at, 
-          categories(name, slug), 
-          profiles(full_name),
-          is_breaking,
-          is_featured,
-          publisher_name
-        `)
-        .neq('id', currentArticleId) // Exclude current article
-        .eq('status', 'published')
-        .order('published_at', { ascending: false })
-        .range(pageNum * ARTICLES_PER_PAGE, (pageNum + 1) * ARTICLES_PER_PAGE - 1);
+      const response = await apiClient.getArticles({
+        page: pageNum + 1,
+        limit: ARTICLES_PER_PAGE,
+        exclude: currentArticleId
+      });
 
-      if (error) {
-        console.error('Error fetching more articles:', error);
-        setHasMore(false);
-      } else if (data && data.length > 0) {
-        setArticles(prev => [...prev, ...data]);
-        if (data.length < ARTICLES_PER_PAGE) {
+      if (response.success) {
+        setArticles(prev => [...prev, ...response.data]);
+        if (response.data.length < ARTICLES_PER_PAGE) {
           setHasMore(false);
         }
       } else {
+        console.error('Error fetching more articles:', response.error);
         setHasMore(false);
       }
     } catch (err) {

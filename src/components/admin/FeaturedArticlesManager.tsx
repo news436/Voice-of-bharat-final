@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, X, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import apiClient from '@/utils/api';
 
 export const FeaturedArticlesManager = () => {
   const [articles, setArticles] = useState<any[]>([]);
@@ -20,13 +21,12 @@ export const FeaturedArticlesManager = () => {
   const fetchFeaturedArticles = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('is_featured', true)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setArticles(data || []);
+      const response = await apiClient.getFeaturedArticles();
+      if (response.success) {
+        setArticles(response.data || []);
+      } else {
+        throw new Error(response.error || 'Failed to fetch featured articles');
+      }
     } catch (error) {
       console.error('Error fetching featured articles:', error);
     } finally {
@@ -35,22 +35,25 @@ export const FeaturedArticlesManager = () => {
   };
 
   const fetchAllArticles = async () => {
-    const { data, error } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error) setAllArticles(data || []);
+    try {
+      const response = await apiClient.getArticles({ limit: 1000 });
+      if (response.success) {
+        setAllArticles(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching all articles:', error);
+    }
   };
 
   const handleRemoveFeatured = async (articleId: string) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_featured: false })
-        .eq('id', articleId);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Article removed from featured.' });
-      fetchFeaturedArticles();
+      const response = await apiClient.updateArticle(articleId, { is_featured: false });
+      if (response.success) {
+        toast({ title: 'Success', description: 'Article removed from featured.' });
+        fetchFeaturedArticles();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
@@ -58,14 +61,14 @@ export const FeaturedArticlesManager = () => {
 
   const handleAddToFeatured = async (articleId: string) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_featured: true })
-        .eq('id', articleId);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Article added to featured.' });
-      setShowAddModal(false);
-      fetchFeaturedArticles();
+      const response = await apiClient.updateArticle(articleId, { is_featured: true });
+      if (response.success) {
+        toast({ title: 'Success', description: 'Article added to featured.' });
+        setShowAddModal(false);
+        fetchFeaturedArticles();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }

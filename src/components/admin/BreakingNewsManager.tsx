@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, AlertTriangle, Eye, EyeOff, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import apiClient from '@/utils/api';
 
 export const BreakingNewsManager = () => {
   const [articles, setArticles] = useState<any[]>([]);
@@ -33,13 +34,12 @@ export const BreakingNewsManager = () => {
   const fetchBreakingNews = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .eq('is_breaking', true)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setArticles(data || []);
+      const response = await apiClient.getBreakingNews();
+      if (response.success) {
+        setArticles(response.data || []);
+      } else {
+        throw new Error(response.error || 'Failed to fetch breaking news');
+      }
     } catch (error) {
       console.error('Error fetching breaking news:', error);
     } finally {
@@ -48,11 +48,14 @@ export const BreakingNewsManager = () => {
   };
 
   const fetchAllArticles = async () => {
-    const { data, error } = await supabase
-      .from('articles')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error) setAllArticles(data || []);
+    try {
+      const response = await apiClient.getArticles({ limit: 1000 });
+      if (response.success) {
+        setAllArticles(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching all articles:', error);
+    }
   };
 
   const handleEdit = (article: any) => {
@@ -71,19 +74,16 @@ export const BreakingNewsManager = () => {
     if (!confirm('Are you sure you want to delete this breaking news?')) return;
 
     try {
-      const { error } = await supabase
-        .from('articles')
-        .delete()
-        .eq('id', articleId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Breaking news deleted successfully.",
-      });
-      
-      fetchBreakingNews();
+      const response = await apiClient.deleteArticle(articleId);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Breaking news deleted successfully.",
+        });
+        fetchBreakingNews();
+      } else {
+        throw new Error(response.error || 'Failed to delete article');
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -95,19 +95,18 @@ export const BreakingNewsManager = () => {
 
   const toggleBreakingStatus = async (articleId: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_breaking: !currentStatus })
-        .eq('id', articleId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Article ${!currentStatus ? 'marked as' : 'removed from'} breaking news.`,
+      const response = await apiClient.updateArticle(articleId, { 
+        is_breaking: !currentStatus 
       });
-      
-      fetchBreakingNews();
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: `Article ${!currentStatus ? 'marked as' : 'removed from'} breaking news.`,
+        });
+        fetchBreakingNews();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -120,22 +119,19 @@ export const BreakingNewsManager = () => {
   const togglePublishStatus = async (articleId: string, currentStatus: string) => {
     try {
       const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-      const { error } = await supabase
-        .from('articles')
-        .update({ 
-          status: newStatus,
-          published_at: newStatus === 'published' ? new Date().toISOString() : null
-        })
-        .eq('id', articleId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Article ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.`,
+      const response = await apiClient.updateArticle(articleId, { 
+        status: newStatus,
+        published_at: newStatus === 'published' ? new Date().toISOString() : null
       });
-      
-      fetchBreakingNews();
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: `Article ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.`,
+        });
+        fetchBreakingNews();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -147,13 +143,13 @@ export const BreakingNewsManager = () => {
 
   const handleRemoveBreaking = async (articleId: string) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_breaking: false })
-        .eq('id', articleId);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Article removed from breaking news.' });
-      fetchBreakingNews();
+      const response = await apiClient.updateArticle(articleId, { is_breaking: false });
+      if (response.success) {
+        toast({ title: 'Success', description: 'Article removed from breaking news.' });
+        fetchBreakingNews();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
@@ -161,14 +157,14 @@ export const BreakingNewsManager = () => {
 
   const handleAddToBreaking = async (articleId: string) => {
     try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_breaking: true })
-        .eq('id', articleId);
-      if (error) throw error;
-      toast({ title: 'Success', description: 'Article added to breaking news.' });
-      setShowAddModal(false);
-      fetchBreakingNews();
+      const response = await apiClient.updateArticle(articleId, { is_breaking: true });
+      if (response.success) {
+        toast({ title: 'Success', description: 'Article added to breaking news.' });
+        setShowAddModal(false);
+        fetchBreakingNews();
+      } else {
+        throw new Error(response.error || 'Failed to update article');
+      }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }

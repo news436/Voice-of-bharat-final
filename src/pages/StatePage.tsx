@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Play } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
+import apiClient from '@/utils/api';
 
 const StatePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -21,37 +22,50 @@ const StatePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Fetch all states for sidebar
-      const { data: allStates } = await supabase.from('states').select('*').order('name');
-      setStates(allStates || []);
-      // Fetch all categories for header/sidebar
-      const { data: allCategories } = await supabase.from('categories').select('*').order('name');
-      setCategories(allCategories || []);
+      try {
+        // Fetch all states for sidebar using API client
+        const statesResponse = await apiClient.getStates();
+        if (statesResponse.success) {
+          setStates(statesResponse.data);
+        }
+        
+        // Fetch all categories for header/sidebar using API client
+        const categoriesResponse = await apiClient.getCategories();
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data);
+        }
 
-      const { data: stateData, error: stateError } = await supabase.from('states').select('*').eq('slug', slug).single();
-      if (stateError || !stateData) {
+        // Fetch specific state using API client
+        const stateResponse = await apiClient.get(`/states/slug/${slug}`);
+        if (!stateResponse.success || !stateResponse.data) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        setState(stateResponse.data);
+        
+        // Fetch articles for this state using API client
+        const articlesResponse = await apiClient.getArticles({ 
+          state: stateResponse.data.slug 
+        });
+        if (articlesResponse.success) {
+          setArticles(articlesResponse.data);
+        }
+        
+        // Fetch videos for this state using API client
+        const videosResponse = await apiClient.getVideos();
+        if (videosResponse.success) {
+          const stateVideos = videosResponse.data.filter((video: any) => 
+            video.state_id === stateResponse.data.id
+          );
+          setVideos(stateVideos);
+        }
+      } catch (error) {
+        console.error('Error fetching state data:', error);
         setNotFound(true);
+      } finally {
         setLoading(false);
-        return;
       }
-      setState(stateData);
-      
-      const { data: stateArticles } = await supabase
-        .from('articles')
-        .select('*, categories(name, slug), profiles(full_name), states(name, slug)')
-        .eq('state_id', stateData.id)
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
-      setArticles(stateArticles || []);
-      
-      const { data: stateVideos } = await supabase
-        .from('videos')
-        .select('*, categories(name), states(name, slug)')
-        .eq('state_id', stateData.id)
-        .order('created_at', { ascending: false });
-      setVideos(stateVideos || []);
-      
-      setLoading(false);
     };
     fetchData();
   }, [slug]);
