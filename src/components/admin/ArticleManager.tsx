@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { PlusCircle, MoreHorizontal, File, ListFilter, ArrowLeft, Save } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, File, ListFilter, ArrowLeft, Save, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { isValidYoutubeUrl, getYoutubeEmbedUrl } from '@/lib/youtube-utils';
 
 const ReactQuill = lazy(() =>
   import('react-quill').then(module => {
@@ -46,6 +47,7 @@ type ArticleFormData = {
   content: string;
   content_hi: string;
   featured_image_url: string;
+  youtube_video_url: string;
   status: 'draft' | 'published' | 'archived';
   is_breaking: boolean;
   is_featured: boolean;
@@ -66,12 +68,13 @@ export const ArticleManager = () => {
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
-    featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
+    featured_image_url: '', youtube_video_url: '', status: 'draft', is_breaking: false, is_featured: false,
     category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
     publisher_name: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { language } = useLanguage();
 
@@ -131,6 +134,27 @@ export const ArticleManager = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate Hindi content since it's the default language
+    if (!formData.title_hi || !formData.summary_hi || !formData.content_hi) {
+      toast({ 
+        title: "Hindi Content Required", 
+        description: "Please provide Hindi title, summary, and content since Hindi is the default language.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Validate YouTube URL if provided
+    if (formData.youtube_video_url && !isValidYoutubeUrl(formData.youtube_video_url)) {
+      toast({ 
+        title: "Invalid YouTube URL", 
+        description: "Please provide a valid YouTube URL (e.g., https://www.youtube.com/watch?v=...)", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated.");
@@ -146,7 +170,11 @@ export const ArticleManager = () => {
         featured_image_url: finalImageUrl,
         slug: formData.slug || generateSlug(formData.title),
         author_id: user.id,
-        published_at: formData.status === 'published' ? new Date().toISOString() : null,
+        published_at: editingArticle 
+          ? (formData.status === 'published' && !editingArticle.published_at 
+              ? new Date().toISOString() 
+              : editingArticle.published_at)
+          : (formData.status === 'published' ? new Date().toISOString() : null),
         category_id: formData.category_id || null,
         state_id: formData.state_id || null,
       };
@@ -178,7 +206,8 @@ export const ArticleManager = () => {
       category_id: article.category_id || '', state_id: article.state_id || '',
       meta_title: article.meta_title || '', meta_description: article.meta_description || '',
       meta_keywords: article.meta_keywords || '',
-      publisher_name: article.publisher_name || article.profiles?.full_name || ''
+      publisher_name: article.publisher_name || article.profiles?.full_name || '',
+      youtube_video_url: article.youtube_video_url || ''
     });
     setShowForm(true);
     setImageFile(null);
@@ -200,7 +229,7 @@ export const ArticleManager = () => {
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: ''
+      publisher_name: '', youtube_video_url: ''
     });
     setImageFile(null);
     setImagePreview(null);
@@ -213,7 +242,7 @@ export const ArticleManager = () => {
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: ''
+      publisher_name: '', youtube_video_url: ''
     });
   };
 
@@ -232,6 +261,16 @@ export const ArticleManager = () => {
     // Dynamically import Quill CSS
     import('react-quill/dist/quill.snow.css');
   }, []);
+
+  // Filtered articles based on search
+  const filteredArticles = useMemo(() => {
+    if (!searchQuery.trim()) return articles;
+    const q = searchQuery.trim().toLowerCase();
+    return articles.filter(a =>
+      (a.title && a.title.toLowerCase().includes(q)) ||
+      (a.title_hi && a.title_hi.toLowerCase().includes(q))
+    );
+  }, [articles, searchQuery]);
 
   if (showForm) {
     return (
@@ -263,7 +302,7 @@ export const ArticleManager = () => {
                 <CardContent className="space-y-6 p-6">
                   <div>
                     <Label htmlFor="title">Title</Label>
-                    <Input id="title" placeholder="Enter article title..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required/>
+                    <Input id="title" placeholder="Enter article title..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
                   </div>
                   <div>
                     <Label htmlFor="slug">Slug</Label>
@@ -285,21 +324,38 @@ export const ArticleManager = () => {
               </Card>
 
               <Card>
-                 <CardHeader><CardTitle>Hindi Content</CardTitle></CardHeader>
+                 <CardHeader>
+                   <CardTitle className="flex items-center gap-2">
+                     <span className="text-red-600">हिंदी सामग्री</span>
+                   </CardTitle>
+                 </CardHeader>
                  <CardContent className="space-y-6 p-6">
                     <div>
-                      <Label htmlFor="title_hi">Title (Hindi)</Label>
-                      <Input id="title_hi" placeholder="Enter Hindi title" value={formData.title_hi} onChange={e => setFormData({...formData, title_hi: e.target.value})} />
+                      <Label htmlFor="title_hi" className="flex items-center gap-2">
+                        Title (Hindi) <span className="text-red-500">*</span>
+                      </Label>
+                      <Input id="title_hi" placeholder="लेख का हिंदी शीर्षक दर्ज करें..." value={formData.title_hi} onChange={e => setFormData({...formData, title_hi: e.target.value})} />
                     </div>
                     <div>
-                      <Label htmlFor="summary_hi">Summary (Hindi)</Label>
-                      <Textarea id="summary_hi" placeholder="Enter Hindi summary" value={formData.summary_hi} onChange={e => setFormData({...formData, summary_hi: e.target.value})} />
+                      <Label htmlFor="summary_hi" className="flex items-center gap-2">
+                        Summary (Hindi) <span className="text-red-500">*</span>
+                      </Label>
+                      <Textarea id="summary_hi" placeholder="लेख का संक्षिप्त सारांश हिंदी में दर्ज करें..." value={formData.summary_hi} onChange={e => setFormData({...formData, summary_hi: e.target.value})} />
                     </div>
                     <div>
-                      <Label>Main Content (Hindi)</Label>
+                      <Label className="flex items-center gap-2">
+                        Main Content (Hindi) <span className="text-red-500">*</span>
+                      </Label>
                       <Suspense fallback={<div className="h-64 w-full rounded-md border flex items-center justify-center">Loading Editor...</div>}>
                         <div className="bg-white">
-                           <ReactQuill theme="snow" value={formData.content_hi} onChange={content => setFormData({...formData, content_hi: content})} modules={quillModules} className="h-64 mb-12" />
+                           <ReactQuill 
+                             theme="snow" 
+                             value={formData.content_hi} 
+                             onChange={content => setFormData({...formData, content_hi: content})} 
+                             modules={quillModules} 
+                             className="h-64 mb-12" 
+                             placeholder="लेख की मुख्य सामग्री हिंदी में लिखें..."
+                           />
                         </div>
                       </Suspense>
                     </div>
@@ -396,6 +452,40 @@ export const ArticleManager = () => {
                         />
                         <p className="text-xs text-muted-foreground">Upload an image to set it as the featured image.</p>
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="youtube_video_url">YouTube Video URL</Label>
+                        <Input 
+                          id="youtube_video_url"
+                          type="url" 
+                          placeholder="https://www.youtube.com/watch?v=..." 
+                          value={formData.youtube_video_url} 
+                          onChange={e => setFormData({...formData, youtube_video_url: e.target.value})} 
+                        />
+                        <p className="text-xs text-muted-foreground">Optional: Add a YouTube video URL to embed in the article. The video will be displayed within the article content.</p>
+                        
+                        {/* YouTube Video Preview */}
+                        {formData.youtube_video_url && isValidYoutubeUrl(formData.youtube_video_url) && (
+                          <div className="mt-4">
+                            <p className="text-xs text-green-600 dark:text-green-400 mb-2">✓ Valid YouTube URL - Preview:</p>
+                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                              <iframe
+                                src={getYoutubeEmbedUrl(formData.youtube_video_url) || ''}
+                                title="YouTube video preview"
+                                className="absolute top-0 left-0 w-full h-full rounded-lg border"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        {formData.youtube_video_url && !isValidYoutubeUrl(formData.youtube_video_url) && (
+                          <div className="mt-2">
+                            <p className="text-xs text-red-600 dark:text-red-400">⚠ Invalid YouTube URL format</p>
+                          </div>
+                        )}
+                      </div>
                   </CardContent>
                </Card>
             </div>
@@ -407,13 +497,27 @@ export const ArticleManager = () => {
 
   return (
     <Card>
-      <CardHeader className="px-7 flex flex-row items-center justify-between">
-        <CardTitle>Articles</CardTitle>
+      <CardHeader className="px-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 w-full md:w-auto">
+          <CardTitle>Articles</CardTitle>
+          <form
+            onSubmit={e => e.preventDefault()}
+            className="flex items-center gap-2 w-full md:w-72 mt-2 md:mt-0"
+            role="search"
+          >
+            <Input
+              type="text"
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pr-10"
+            />
+            <Button type="button" size="icon" variant="ghost" tabIndex={-1} disabled>
+              <Search className="h-4 w-4 text-gray-400" />
+            </Button>
+          </form>
+        </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" className="gap-1">
-            <ListFilter className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">Filter</span>
-          </Button>
           <Button size="sm" className="gap-1" onClick={() => setShowForm(true)}>
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">New Article</span>
@@ -433,7 +537,7 @@ export const ArticleManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {articles.map((article) => (
+            {filteredArticles.map((article) => (
               <TableRow key={article.id}>
                 <TableCell className="font-medium">{article.title}</TableCell>
                 <TableCell>{article.profiles?.full_name || 'N/A'}</TableCell>

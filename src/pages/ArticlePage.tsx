@@ -9,6 +9,7 @@ import { AdSlot } from '@/components/news/AdSlot';
 import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
+import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -237,6 +238,17 @@ const ArticlePage = () => {
     return formatDate(dateString);
   };
 
+  const formatShortTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
   const getReadingTime = (content: string) => {
     const wordsPerMinute = 200;
     const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).length;
@@ -260,19 +272,26 @@ const ArticlePage = () => {
             <Card className="shadow-2xl border-0 overflow-hidden bg-white dark:bg-gray-900">
               {/* Hero Image Section */}
               {article.featured_image_url && (
-                <div className="relative w-full h-[400px] sm:h-[500px] overflow-hidden">
+                <div className="relative w-full overflow-hidden">
+                  {/* Logo Mark in Top Right */}
+                  <img
+                    src="/logo.png"
+                    alt="Voice of Bharat Logo Mark"
+                    className="absolute top-4 right-4 w-16 h-16 z-20 drop-shadow-lg"
+                    style={{objectFit: 'contain', background: 'transparent'}}
+                  />
                   <img
                     src={article.featured_image_url}
                     alt={title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4 drop-shadow-lg">
-                      {title}
-                    </h1>
-                  </div>
                 </div>
+              )}
+              {article.featured_image_url && (
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4 mt-4 text-black dark:text-white drop-shadow-lg px-4 sm:px-8 mt-6">
+                  {title}
+                </h1>
               )}
 
               {/* Article Content */}
@@ -284,13 +303,17 @@ const ArticlePage = () => {
                       <User className="h-4 w-4" />
                       <span className="font-medium">{article.publisher_name || article.profiles?.full_name || 'Unknown Author'}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>{article.published_at ? formatDate(article.published_at) : ''}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{getReadingTime(content)} min read</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                      <div className="flex items-center gap-2 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <Calendar className="h-4 w-4 flex-shrink-0" />
+                        <span>{article.published_at ? formatDate(article.published_at) : ''}</span>
+                        <span className="mx-1">·</span>
+                        <span>{article.published_at ? formatShortTimeAgo(article.published_at) : ''}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{getReadingTime(content)} min read</span>
+                      </div>
                     </div>
                   </div>
                   
@@ -337,19 +360,9 @@ const ArticlePage = () => {
                       onClick={shareOnTwitter}
                       title="Share on Twitter"
                     >
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                      </svg>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="p-2 text-pink-600 hover:text-pink-700 border-pink-200 hover:border-pink-300" 
-                      onClick={shareOnInstagram}
-                      title="Share on Instagram"
-                    >
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987 6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.49-3.323-1.297C4.198 14.895 3.708 13.744 3.708 12.447s.49-2.448 1.418-3.323c.875-.807 2.026-1.297 3.323-1.297s2.448.49 3.323 1.297c.928.875 1.418 2.026 1.418 3.323s-.49 2.448-1.418 3.244c-.875.807-2.026 1.297-3.323 1.297zm7.83-9.781c-.49 0-.928-.175-1.297-.49-.368-.315-.49-.753-.49-1.243 0-.49.122-.928.49-1.243.369-.315.807-.49 1.297-.49s.928.175 1.297.49c.368.315.49.753.49 1.243 0 .49-.122.928-.49 1.243-.369.315-.807.49-1.297.49z"/>
+                      {/* X (Twitter) Logo SVG */}
+                      <svg className="h-4 w-4" viewBox="0 0 1200 1227" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1199.61 0H950.684L599.805 439.228L249.316 0H0L492.228 617.228L0 1227H249.316L599.805 787.772L950.684 1227H1200L707.772 609.772L1199.61 0ZM299.684 111.684H400.684L599.805 367.772L799.316 111.684H900.316L599.805 509.772L299.684 111.684ZM299.684 1115.32L599.805 717.228L900.316 1115.32H799.316L599.805 859.228L400.684 1115.32H299.684Z" />
                       </svg>
                     </Button>
                   </div>
@@ -357,7 +370,7 @@ const ArticlePage = () => {
 
                 {/* Article Body */}
                 <article 
-                  className="prose prose-lg sm:prose-xl max-w-none 
+                  className="prose prose-lg sm:prose-xl max-w-none select-none pointer-events-none
                     prose-headings:text-gray-900 dark:prose-headings:text-white
                     prose-p:text-gray-700 dark:prose-p:text-gray-300
                     prose-strong:text-gray-900 dark:prose-strong:text-white
@@ -368,6 +381,13 @@ const ArticlePage = () => {
                     prose-hr:border-gray-300 dark:prose-hr:border-gray-600"
                   dangerouslySetInnerHTML={{ __html: content }} 
                 />
+
+                {/* YouTube Video Section */}
+                {article.youtube_video_url && (
+                  <div className="mt-8">
+                    <ArticleVideoPlayer youtubeUrl={article.youtube_video_url} title={title} />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -425,8 +445,8 @@ const ArticlePage = () => {
                                 <Badge variant="outline" className="text-xs px-2 py-0">
                                   {relatedArticle.categories.name}
                                 </Badge>
-                              )}
-                            </div>
+              )}
+            </div>
                           </div>
                         </Link>
                       );
@@ -440,16 +460,6 @@ const ArticlePage = () => {
                     </div>
                   )}
                 </div>
-                {relatedArticles.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Link 
-                      to="/" 
-                      className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
-                    >
-                      View All Articles →
-                    </Link>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>

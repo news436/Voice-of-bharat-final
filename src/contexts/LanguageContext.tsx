@@ -83,7 +83,24 @@ const translations = {
     'oldest': 'Oldest',
     'filter': 'Filter',
     'sort': 'Sort',
-    'up_next': 'Up Next'
+    'up_next': 'Up Next',
+    'live.now': 'Live Now',
+    'watch.now': 'Watch Now',
+    'live.badge': 'LIVE',
+    'about.voice_of_bharat': 'About Voice of Bharat',
+    'about.heartbeat': 'The Heartbeat of the Nation',
+    'about.intro': 'We are Voice of Bharat. This is our story.',
+    'about.our_story': 'Our Story',
+    'about.our_mission': 'Our Mission',
+    'about.mission_text': 'To deliver fearless journalism, uncover the truth, and provide a platform for the diverse voices that make up the fabric of India.',
+    'about.our_vision': 'Our Vision',
+    'about.vision_text': 'To be the most trusted and essential source of news and information, fostering an informed and engaged citizenry for a stronger nation.',
+    'about.team_image_alt': 'Our team at work',
+    'about.meet_team': 'Meet The Team',
+    'support.our_mission': 'Support Our Mission',
+    'nav.support_us': 'Support Us',
+    'learn.more': 'Learn More',
+    'contribute.now': 'Contribute Now'
   },
   hi: {
     'nav.home': 'होम',
@@ -159,7 +176,24 @@ const translations = {
     'oldest': 'पुराने',
     'filter': 'फ़िल्टर',
     'sort': 'क्रमबद्ध करें',
-    'up_next': 'अगला'
+    'up_next': 'अगला',
+    'live.now': 'लाइव अब',
+    'watch.now': 'अब देखें',
+    'live.badge': 'लाइव',
+    'about.voice_of_bharat': 'भारत की आवाज़ के बारे में',
+    'about.heartbeat': 'राष्ट्र की धड़कन',
+    'about.intro': 'हम हैं Voice of Bharat। यह है हमारी कहानी।',
+    'about.our_story': 'हमारी कहानी',
+    'about.our_mission': 'हमारा मिशन',
+    'about.mission_text': 'निर्भीक पत्रकारिता करना, सच्चाई को उजागर करना, और भारत की विविध आवाज़ों को मंच प्रदान करना हमारा उद्देश्य है।',
+    'about.our_vision': 'हमारा विज़न',
+    'about.vision_text': 'सबसे विश्वसनीय और आवश्यक समाचार एवं जानकारी का स्रोत बनना, ताकि एक जागरूक और संलग्न नागरिक समाज का निर्माण हो सके।',
+    'about.team_image_alt': 'हमारी टीम कार्य करते हुए',
+    'about.meet_team': 'हमारी टीम से मिलें',
+    'support.our_mission': 'हमारे मिशन का समर्थन करें',
+    'nav.support_us': 'सपोर्ट करें',
+    'learn.more': 'और जानें',
+    'contribute.now': 'अभी योगदान करें'
   }
 };
 

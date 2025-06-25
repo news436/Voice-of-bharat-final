@@ -68,30 +68,29 @@ const CategoryPage = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <h1 className="text-3xl font-bold text-black dark:text-white mb-4">
-              {language === 'hi' && category.name_hi ? category.name_hi : category.name}
-            </h1>
-            <p className="mb-8 text-gray-700 dark:text-gray-300">
-              {language === 'hi' && category.description_hi ? category.description_hi : category.description}
-            </p>
+        <h1 className="text-3xl font-bold text-black dark:text-white mb-4">
+          {language === 'hi' && category.name_hi ? category.name_hi : category.name}
+        </h1>
+        <p className="mb-8 text-gray-700 dark:text-gray-300">
+          {language === 'hi' && category.description_hi ? category.description_hi : category.description}
+        </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map((article) => {
-                 const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
-                 return (
-                  <Link key={article.id} to={`/article/${article.slug}`} className="block">
-                    <Card className="hover:shadow-lg transition-shadow">
-                      {article.featured_image_url && (
-                        <img src={article.featured_image_url} alt={title} className="w-full h-48 object-cover rounded-t-lg" />
-                      )}
-                      <CardContent className="p-4">
-                        <h2 className="text-xl font-bold mb-2 text-black dark:text-white">{title}</h2>
-                        <Badge variant="secondary">{category.name}</Badge>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {articles.map((article) => {
+             const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
+             return (
+              <Link key={article.id} to={`/article/${article.slug}`} className="block">
+                <Card className="hover:shadow-lg transition-shadow">
+                  {article.featured_image_url && (
+                    <img src={article.featured_image_url} alt={title} className="w-full h-auto object-cover rounded-t-lg" />
+                  )}
+                  <CardContent className="p-4">
+                    <h2 className="text-xl font-bold mb-2 text-black dark:text-white">{title}</h2>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
             </div>
           </div>
           

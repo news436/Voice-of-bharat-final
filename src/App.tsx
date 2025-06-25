@@ -21,6 +21,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 import { ScrollToTop } from "./components/utils/ScrollToTop";
 import AboutUsPage from "./pages/AboutUsPage";
 import SupportUsPage from "./pages/SupportUsPage";
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/live/:id" element={<MainLayout><LiveStreamPage /></MainLayout>} />
                 <Route path="/about-us" element={<MainLayout><AboutUsPage /></MainLayout>} />
                 <Route path="/support-us" element={<MainLayout><SupportUsPage /></MainLayout>} />
+                <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicyPage /></MainLayout>} />
                 <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
               </Routes>
             </BrowserRouter>

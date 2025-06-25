@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { Suspense } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { Plus, Trash } from 'lucide-react';
 
 const quillModules = {
   toolbar: [
@@ -23,7 +24,9 @@ const quillModules = {
 
 export const AboutUsManager = () => {
   const [shortDescription, setShortDescription] = useState('');
+  const [shortDescriptionHi, setShortDescriptionHi] = useState('');
   const [detailedContent, setDetailedContent] = useState('');
+  const [detailedContentHi, setDetailedContentHi] = useState('');
   const [heroImageUrl, setHeroImageUrl] = useState('');
   const [teamImageUrl, setTeamImageUrl] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +35,9 @@ export const AboutUsManager = () => {
   const [teamImageFile, setTeamImageFile] = useState<File | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string | null>(null);
   const [teamImagePreview, setTeamImagePreview] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [aboutUsId, setAboutUsId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAboutUsContent = async () => {
@@ -42,8 +48,11 @@ export const AboutUsManager = () => {
         .single();
 
       if (data) {
+        setAboutUsId(data.id || null);
         setShortDescription(data.short_description || '');
+        setShortDescriptionHi(data.short_description_hi || '');
         setDetailedContent(data.detailed_content || '');
+        setDetailedContentHi(data.detailed_content_hi || '');
         setHeroImageUrl(data.hero_image_url || '');
         setTeamImageUrl(data.team_image_url || '');
         setHeroImagePreview(data.hero_image_url || null);
@@ -59,6 +68,19 @@ export const AboutUsManager = () => {
     };
 
     fetchAboutUsContent();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      setTeamLoading(true);
+      const { data } = await supabase
+        .from('about_us_team_members')
+        .select('*')
+        .order('ordering', { ascending: true });
+      if (data) setTeamMembers(data);
+      setTeamLoading(false);
+    };
+    fetchTeamMembers();
   }, []);
 
   const uploadImage = async (file: File) => {
@@ -122,12 +144,15 @@ export const AboutUsManager = () => {
       const { data, error } = await supabase
         .from('about_us')
         .upsert({
+          id: aboutUsId,
           short_description: shortDescription,
+          short_description_hi: shortDescriptionHi,
           detailed_content: detailedContent,
+          detailed_content_hi: detailedContentHi,
           hero_image_url: finalHeroImageUrl,
           team_image_url: finalTeamImageUrl,
           updated_at: new Date().toISOString(),
-        })
+        }, { onConflict: 'id' })
         .select()
         .single();
 
@@ -143,7 +168,9 @@ export const AboutUsManager = () => {
           description: "About Us content has been updated.",
         });
         setShortDescription(data.short_description || '');
+        setShortDescriptionHi(data.short_description_hi || '');
         setDetailedContent(data.detailed_content || '');
+        setDetailedContentHi(data.detailed_content_hi || '');
         setHeroImageUrl(data.hero_image_url || '');
         setTeamImageUrl(data.team_image_url || '');
         setHeroImageFile(null);
@@ -160,6 +187,50 @@ export const AboutUsManager = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const addTeamMember = () => {
+    setTeamMembers([...teamMembers, { name: '', role: '', image_url: '', imageFile: null }]);
+  };
+
+  const removeTeamMember = (idx: number) => {
+    setTeamMembers(teamMembers.filter((_, i) => i !== idx));
+  };
+
+  const handleMemberChange = (idx: number, field: string, value: any) => {
+    setTeamMembers(teamMembers.map((m, i) => i === idx ? { ...m, [field]: value } : m));
+  };
+
+  const handleMemberImageChange = (idx: number, file: File) => {
+    setTeamMembers(teamMembers.map((m, i) => i === idx ? { ...m, imageFile: file, image_url: URL.createObjectURL(file) } : m));
+  };
+
+  const saveTeamMembers = async () => {
+    setTeamLoading(true);
+    try {
+      const uploadedMembers = await Promise.all(teamMembers.map(async (member, idx) => {
+        let imageUrl = member.image_url;
+        if (member.imageFile) {
+          imageUrl = await uploadImage(member.imageFile);
+        }
+        return {
+          ...member,
+          image_url: imageUrl,
+          ordering: idx,
+          imageFile: undefined,
+        };
+      }));
+      await supabase.from('about_us_team_members').delete().neq('id', 0);
+      if (uploadedMembers.length > 0) {
+        await supabase.from('about_us_team_members').insert(
+          uploadedMembers.map(({ name, role, image_url, ordering }) => ({ name, role, image_url, ordering }))
+        );
+      }
+      toast({ title: 'Team updated', description: 'Team members have been saved.' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    }
+    setTeamLoading(false);
   };
 
   return (
@@ -191,6 +262,19 @@ export const AboutUsManager = () => {
                     disabled={isLoading || saving}
                   />
                   <p className="mt-2 text-xs text-muted-foreground">This will be shown on the homepage.</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="shortDescriptionHi">Short Description (Hindi)</Label>
+                  <Input
+                    id="shortDescriptionHi"
+                    value={shortDescriptionHi}
+                    onChange={(e) => setShortDescriptionHi(e.target.value)}
+                    placeholder="A brief introduction to display on the homepage in Hindi."
+                    className="mt-1"
+                    disabled={isLoading || saving}
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">This will be shown on the homepage in Hindi.</p>
                 </div>
 
                 <div>
@@ -230,23 +314,44 @@ export const AboutUsManager = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="detailedContent">Detailed Content</Label>
-                <div className="mt-1">
-                  <Suspense fallback={<div className="h-64 w-full rounded-md border flex items-center justify-center">Loading Editor...</div>}>
-                    <div className="bg-white">
-                      <ReactQuill 
-                        theme="snow" 
-                        value={detailedContent} 
-                        onChange={setDetailedContent} 
-                        modules={quillModules} 
-                        className="h-64 mb-12"
-                        placeholder="The full 'About Us' content for the dedicated page."
-                      />
-                    </div>
-                  </Suspense>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="detailedContent">Detailed Content</Label>
+                  <div className="mt-1">
+                    <Suspense fallback={<div className="h-64 w-full rounded-md border flex items-center justify-center">Loading Editor...</div>}>
+                      <div className="bg-white">
+                        <ReactQuill 
+                          theme="snow" 
+                          value={detailedContent} 
+                          onChange={setDetailedContent} 
+                          modules={quillModules} 
+                          className="h-64 mb-12"
+                          placeholder="The full 'About Us' content for the dedicated page."
+                        />
+                      </div>
+                    </Suspense>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">This will be shown on the /about-us page. Supports rich text formatting.</p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">This will be shown on the /about-us page. Supports rich text formatting.</p>
+
+                <div>
+                  <Label htmlFor="detailedContentHi">Detailed Content (Hindi)</Label>
+                  <div className="mt-1">
+                    <Suspense fallback={<div className="h-64 w-full rounded-md border flex items-center justify-center">Loading Editor...</div>}>
+                      <div className="bg-white">
+                        <ReactQuill 
+                          theme="snow" 
+                          value={detailedContentHi} 
+                          onChange={setDetailedContentHi} 
+                          modules={quillModules} 
+                          className="h-64 mb-12"
+                          placeholder="The full 'About Us' content for the dedicated page in Hindi."
+                        />
+                      </div>
+                    </Suspense>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">This will be shown on the /about-us page in Hindi. Supports rich text formatting.</p>
+                </div>
               </div>
             </div>
 
@@ -256,6 +361,44 @@ export const AboutUsManager = () => {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Meet the Team</CardTitle>
+          <CardDescription>Manage the team members shown in the About Us page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {teamMembers.map((member, idx) => (
+              <div key={idx} className="flex flex-col md:flex-row items-center gap-4 border-b pb-4 mb-4">
+                <div className="flex-shrink-0">
+                  {member.image_url ? (
+                    <img src={member.image_url} alt="Team member" className="w-20 h-20 rounded-full object-cover border" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">No Image</div>
+                  )}
+                  <Input type="file" accept="image/*" className="mt-2" onChange={e => e.target.files && handleMemberImageChange(idx, e.target.files[0])} />
+                </div>
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Name</Label>
+                    <Input value={member.name} onChange={e => handleMemberChange(idx, 'name', e.target.value)} placeholder="Name" />
+                  </div>
+                  <div>
+                    <Label>Role</Label>
+                    <Input value={member.role} onChange={e => handleMemberChange(idx, 'role', e.target.value)} placeholder="Role" />
+                  </div>
+                </div>
+                <Button type="button" variant="destructive" size="icon" className="self-start mt-2" onClick={() => removeTeamMember(idx)}><Trash className="w-4 h-4" /></Button>
+              </div>
+            ))}
+            <Button type="button" variant="outline" onClick={addTeamMember} className="gap-2"><Plus className="w-4 h-4" /> Add Member</Button>
+            <div className="flex justify-end">
+              <Button type="button" onClick={saveTeamMembers} disabled={teamLoading}>{teamLoading ? 'Saving...' : 'Save Team'}</Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

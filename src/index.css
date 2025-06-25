@@ -133,7 +133,7 @@
   .breaking-marquee-track {
     display: flex;
     width: max-content;
-    animation: breaking-marquee 30s linear infinite;
+    animation: breaking-marquee 90s linear infinite;
   }
   @keyframes breaking-marquee {
     0% { transform: translateX(0); }

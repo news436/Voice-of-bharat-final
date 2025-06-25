@@ -173,7 +173,7 @@ const LiveStreamPage = () => {
                 </AspectRatio>
                 <div className="p-6">
                   <Badge className="bg-red-600 text-white animate-pulse mb-4">
-                    <Radio className="h-4 w-4 mr-2" /> LIVE
+                    <Radio className="h-4 w-4 mr-2" /> {t('live.badge')}
                   </Badge>
                   <h1 className="text-3xl font-bold mb-4">{title}</h1>
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, AlertTriangle, Eye, EyeOff, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 export const BreakingNewsManager = () => {
@@ -22,23 +21,23 @@ export const BreakingNewsManager = () => {
     is_breaking: true,
     status: 'published' as 'draft' | 'published'
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [allArticles, setAllArticles] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(8);
 
   useEffect(() => {
     fetchBreakingNews();
   }, []);
 
   const fetchBreakingNews = async () => {
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('articles')
-        .select(`
-          *,
-          categories(name, slug),
-          states(name, slug)
-        `)
+        .select('*')
         .eq('is_breaking', true)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       setArticles(data || []);
     } catch (error) {
@@ -48,58 +47,12 @@ export const BreakingNewsManager = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const articleData = {
-        ...formData,
-        slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        published_at: formData.status === 'published' ? new Date().toISOString() : null
-      };
-
-      if (editingArticle) {
-        const { error } = await supabase
-          .from('articles')
-          .update(articleData)
-          .eq('id', editingArticle.id);
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Breaking news updated successfully.",
-        });
-      } else {
-        const { error } = await supabase
-          .from('articles')
-          .insert([articleData]);
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Success",
-          description: "Breaking news created successfully.",
-        });
-      }
-
-      setShowForm(false);
-      setEditingArticle(null);
-      setFormData({
-        title: '',
-        summary: '',
-        content: '',
-        is_breaking: true,
-        status: 'published'
-      });
-      fetchBreakingNews();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const fetchAllArticles = async () => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (!error) setAllArticles(data || []);
   };
 
   const handleEdit = (article: any) => {
@@ -192,171 +145,153 @@ export const BreakingNewsManager = () => {
     }
   };
 
+  const handleRemoveBreaking = async (articleId: string) => {
+    try {
+      const { error } = await supabase
+        .from('articles')
+        .update({ is_breaking: false })
+        .eq('id', articleId);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Article removed from breaking news.' });
+      fetchBreakingNews();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleAddToBreaking = async (articleId: string) => {
+    try {
+      const { error } = await supabase
+        .from('articles')
+        .update({ is_breaking: true })
+        .eq('id', articleId);
+      if (error) throw error;
+      toast({ title: 'Success', description: 'Article added to breaking news.' });
+      setShowAddModal(false);
+      fetchBreakingNews();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const filteredAllArticles = allArticles.filter(
+    (a) =>
+      !a.is_breaking &&
+      a.title?.toLowerCase().includes(search.toLowerCase())
+  );
+
   if (isLoading) {
     return <div className="flex justify-center py-8">Loading breaking news...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900">Breaking News Management</h2>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold flex items-center gap-2">
+          <AlertTriangle className="h-7 w-7 text-red-500" /> Breaking News
+        </h2>
         <Button
-          onClick={() => {
-            setShowForm(true);
-            setEditingArticle(null);
-            setFormData({
-              title: '',
-              summary: '',
-              content: '',
-              is_breaking: true,
-              status: 'published'
-            });
+          variant="outline"
+          className="flex items-center gap-2 border-2 border-red-400 text-red-700 hover:bg-red-50"
+          onClick={async () => {
+            await fetchAllArticles();
+            setShowAddModal(true);
           }}
-          className="bg-red-600 hover:bg-red-700"
         >
-          <Plus className="h-4 w-4 mr-2" />
-          New Breaking News
+          <Plus className="h-5 w-5" /> Add from Existing
         </Button>
       </div>
-
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{editingArticle ? 'Edit Breaking News' : 'Create Breaking News'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {articles.slice(0, visibleCount).map(article => (
+          <div
+            key={article.id}
+            className="rounded-xl shadow bg-white dark:bg-gray-900 border border-red-200 dark:border-red-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
+          >
+            {article.featured_image_url && (
+              <img
+                src={article.featured_image_url}
+                alt={article.title}
+                className="w-full h-28 object-cover"
+              />
+            )}
+            <div className="p-3 flex-1 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="destructive" className="animate-pulse">
+                  BREAKING
+                </Badge>
+                <span className="ml-auto text-xs text-gray-400">
+                  {new Date(article.created_at).toLocaleDateString()}
+                </span>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Summary</label>
-                <Textarea
-                  value={formData.summary}
-                  onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                  rows={2}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Content</label>
-                <Textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={6}
-                />
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.is_breaking}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_breaking: checked })}
-                  />
-                  <label className="text-sm font-medium">Breaking News</label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.status === 'published'}
-                    onCheckedChange={(checked) => setFormData({ ...formData, status: checked ? 'published' : 'draft' })}
-                  />
-                  <label className="text-sm font-medium">Publish Immediately</label>
-                </div>
-              </div>
-
-              <div className="flex space-x-4">
-                <Button type="submit" className="bg-red-600 hover:bg-red-700">
-                  {editingArticle ? 'Update' : 'Create'} Breaking News
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingArticle(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 gap-6">
-        {articles.map((article) => (
-          <Card key={article.id}>
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    {article.is_breaking && (
-                      <Badge variant="destructive" className="animate-pulse">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        BREAKING
-                      </Badge>
-                    )}
-                    <Badge variant={article.status === 'published' ? 'default' : 'secondary'}>
-                      {article.status}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold mb-2">{article.title}</h3>
-                  
-                  {article.summary && (
-                    <p className="text-gray-600 mb-2">{article.summary}</p>
-                  )}
-                  
-                  <div className="text-sm text-gray-500">
-                    Created: {new Date(article.created_at).toLocaleString()}
-                    {article.published_at && (
-                      <span className="ml-4">
-                        Published: {new Date(article.published_at).toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2 ml-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleBreakingStatus(article.id, article.is_breaking)}
-                    className={article.is_breaking ? "text-red-600" : "text-green-600"}
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => togglePublishStatus(article.id, article.status)}
-                    className={article.status === 'published' ? "text-green-600" : "text-blue-600"}
-                  >
-                    {article.status === 'published' ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </Button>
-                  
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(article)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(article.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <h3 className="font-bold text-lg mb-1 line-clamp-2">{article.title}</h3>
+              <Button
+                size="sm"
+                className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => handleRemoveBreaking(article.id)}
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
+      {articles.length > visibleCount && (
+        <div className="flex justify-center mt-4">
+          <Button onClick={() => setVisibleCount(visibleCount + 4)} variant="outline">View More</Button>
+        </div>
+      )}
+      {/* Add from Existing Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowAddModal(false)}
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <h3 className="text-xl font-bold mb-4">Add Article to Breaking News</h3>
+            <input
+              type="text"
+              placeholder="Search articles by title or summary..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+            />
+            <div className="max-h-96 overflow-y-auto space-y-4">
+              {filteredAllArticles.length === 0 ? (
+                <div className="text-gray-500 text-center">No articles found.</div>
+              ) : (
+                filteredAllArticles.map(article => (
+                  <div
+                    key={article.id}
+                    className="flex items-center gap-4 p-3 rounded-lg border hover:bg-red-50 dark:hover:bg-red-900/20 transition cursor-pointer"
+                  >
+                    {article.featured_image_url && (
+                      <img
+                        src={article.featured_image_url}
+                        alt={article.title}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-base line-clamp-1">{article.title}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-400 text-red-700"
+                      onClick={() => handleAddToBreaking(article.id)}
+                    >
+                      <AlertTriangle className="h-4 w-4 mr-1 text-red-500" /> Add
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

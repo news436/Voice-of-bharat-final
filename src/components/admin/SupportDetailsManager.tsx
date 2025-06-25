@@ -11,7 +11,9 @@ import { Loader2, Save, Upload } from 'lucide-react';
 interface SupportDetails {
   id: number;
   description: string;
+  description_hi: string;
   account_holder_name: string;
+  account_holder_name_hi: string;
   account_number: string;
   ifsc_code: string;
   bank_name: string;
@@ -25,7 +27,9 @@ const SupportDetailsManager = () => {
   const [supportDetails, setSupportDetails] = useState<SupportDetails>({
     id: 1,
     description: '',
+    description_hi: '',
     account_holder_name: '',
+    account_holder_name_hi: '',
     account_number: '',
     ifsc_code: '',
     bank_name: '',
@@ -137,7 +141,9 @@ const SupportDetailsManager = () => {
 
       const dataToSave = {
         description: supportDetails.description,
+        description_hi: supportDetails.description_hi,
         account_holder_name: supportDetails.account_holder_name,
+        account_holder_name_hi: supportDetails.account_holder_name_hi,
         account_number: supportDetails.account_number,
         ifsc_code: supportDetails.ifsc_code,
         bank_name: supportDetails.bank_name,
@@ -236,6 +242,17 @@ const SupportDetailsManager = () => {
               />
             </div>
 
+            <div>
+              <Label htmlFor="description_hi">Description (Hindi)</Label>
+              <Textarea
+                id="description_hi"
+                value={supportDetails.description_hi}
+                onChange={(e) => handleInputChange('description_hi', e.target.value)}
+                placeholder="Enter a compelling description for the support page in Hindi..."
+                rows={4}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="account_holder_name">Account Holder Name</Label>
@@ -244,6 +261,16 @@ const SupportDetailsManager = () => {
                   value={supportDetails.account_holder_name}
                   onChange={(e) => handleInputChange('account_holder_name', e.target.value)}
                   placeholder="e.g., VOICE OF BHARAT FOUNDATION"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="account_holder_name_hi">Account Holder Name (Hindi)</Label>
+                <Input
+                  id="account_holder_name_hi"
+                  value={supportDetails.account_holder_name_hi}
+                  onChange={(e) => handleInputChange('account_holder_name_hi', e.target.value)}
+                  placeholder="e.g., वॉइस ऑफ भारत फाउंडेशन"
                 />
               </div>
 

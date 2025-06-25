@@ -87,7 +87,7 @@ export const AdManager = () => {
   async function saveAd(slot: number) {
     setSaving(s => ({ ...s, [slot]: true }));
     try {
-      const ad = ads[slot];
+    const ad = ads[slot];
       let finalImageUrl = ad.image_url;
 
       // Upload image if new file selected
@@ -96,21 +96,21 @@ export const AdManager = () => {
         finalImageUrl = await uploadImage(ad.imageFile);
       }
 
-      const upsertData = {
-        slot_number: slot,
-        html_code: ad.html_code || '',
-        enabled: ad.enabled,
+    const upsertData = {
+      slot_number: slot,
+      html_code: ad.html_code || '',
+      enabled: ad.enabled,
         image_url: finalImageUrl || '',
         redirect_url: ad.redirect_url || '',
         ad_type: ad.ad_type || 'html',
-      };
-
-      const { error } = await supabase.from('ads').upsert(upsertData, { onConflict: 'slot_number' });
-
-      if (error) {
-        toast({ title: 'Error', description: `Failed to save Ad Slot ${slot}.`, variant: 'destructive' });
-      } else {
-        toast({ title: 'Saved', description: `Ad Slot ${slot} has been updated.` });
+    };
+    
+    const { error } = await supabase.from('ads').upsert(upsertData, { onConflict: 'slot_number' });
+    
+    if (error) {
+      toast({ title: 'Error', description: `Failed to save Ad Slot ${slot}.`, variant: 'destructive' });
+    } else {
+      toast({ title: 'Saved', description: `Ad Slot ${slot} has been updated.` });
         // Clear the file and preview after successful save
         handleAdChange(slot, 'imageFile', null);
         handleAdChange(slot, 'imagePreview', null);
@@ -119,7 +119,7 @@ export const AdManager = () => {
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
-      setSaving(s => ({ ...s, [slot]: false }));
+    setSaving(s => ({ ...s, [slot]: false }));
     }
   }
 
@@ -245,18 +245,18 @@ export const AdManager = () => {
                     </div>
 
                     {ads[slot]?.ad_type === 'html' ? (
-                      <div className="space-y-2">
+                  <div className="space-y-2">
                         <Label htmlFor={`html-code-${slot}`}>Ad Code</Label>
-                        <Textarea
+                     <Textarea
                           id={`html-code-${slot}`}
-                          className="w-full font-mono text-xs"
-                          rows={12}
-                          placeholder="<!-- Paste your ad script or HTML here -->"
-                          value={ads[slot]?.html_code || ''}
-                          onChange={e => handleAdChange(slot, 'html_code', e.target.value)}
-                          spellCheck={false}
-                        />
-                      </div>
+                        className="w-full font-mono text-xs"
+                        rows={12}
+                        placeholder="<!-- Paste your ad script or HTML here -->"
+                        value={ads[slot]?.html_code || ''}
+                        onChange={e => handleAdChange(slot, 'html_code', e.target.value)}
+                        spellCheck={false}
+                     />
+                  </div>
                     ) : (
                       <div className="space-y-4">
                         <div>
@@ -284,8 +284,8 @@ export const AdManager = () => {
                             URL where users will be redirected when they click the ad
                           </p>
                         </div>
-                      </div>
-                    )}
+                          </div>
+                        )}
                   </div>
 
                   <div className="space-y-2">
@@ -331,19 +331,19 @@ export const AdManager = () => {
                           ) : <p className="text-xs text-muted-foreground p-4 text-center">Ad is disabled</p>}
                         </div>
                       </div>
-                    </div>
+                      </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end">
-                  <Button
-                    type="button"
-                    onClick={() => saveAd(slot)}
-                    disabled={saving[slot] || isLoading}
-                  >
-                    {saving[slot] ? 'Saving...' : `Save Slot ${slot}`}
-                  </Button>
-                </div>
+                 <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={() => saveAd(slot)}
+                      disabled={saving[slot] || isLoading}
+                    >
+                      {saving[slot] ? 'Saving...' : `Save Slot ${slot}`}
+                    </Button>
+                 </div>
               </div>
             </div>
           </TabsContent>
@@ -351,4 +351,4 @@ export const AdManager = () => {
       </Tabs>
     </div>
   );
-};
+}; 

@@ -104,16 +104,11 @@ const StatePage = () => {
                             <img
                               src={article.featured_image_url}
                               alt={article.title}
-                              className="w-full h-48 object-cover rounded-t-2xl"
+                              className="w-full h-auto object-cover rounded-t-2xl"
                             />
                           )}
                           <div className="space-y-2 flex-1 flex flex-col p-4">
                             <div className="flex items-center space-x-2">
-                              {article.categories && (
-                                <Badge variant="outline" className="border-black text-black dark:border-white dark:text-white">
-                                  {article.categories.name}
-                                </Badge>
-                              )}
                               {article.is_breaking && (
                                 <Badge variant="destructive">Breaking</Badge>
                               )}
@@ -139,10 +134,10 @@ const StatePage = () => {
 
             {/* Videos */}
             {videos.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
-                  {t('videos')}
-                </h2>
+            <section>
+              <h2 className="text-2xl font-bold text-black dark:text-white mb-6 pb-2 border-b-2 border-red-600 inline-block">
+                {t('videos')}
+              </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {videos.map((video) => (
                     <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl">
@@ -150,11 +145,11 @@ const StatePage = () => {
                         <CardContent className="p-0 flex-1 flex flex-col">
                           {video.thumbnail_url && (
                             <div className="relative">
-                              <img
-                                src={video.thumbnail_url}
-                                alt={video.title}
-                                className="w-full h-48 object-cover rounded-t-2xl"
-                              />
+                            <img
+                              src={video.thumbnail_url}
+                              alt={video.title}
+                              className="w-full h-auto object-cover rounded-t-2xl"
+                            />
                               <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-t-2xl">
                                 <Play className="h-12 w-12 text-white" />
                               </div>
@@ -181,7 +176,7 @@ const StatePage = () => {
                   ))}
                 </div>
               </section>
-            )}
+              )}
           </div>
 
           {/* Sidebar */}
@@ -205,24 +200,24 @@ const StatePage = () => {
             {/* Other States */}
             {states.length > 1 && (
               <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
-                <CardContent className="p-6">
+              <CardContent className="p-6">
                   <h3 className="text-lg font-bold text-black dark:text-white mb-4">{t('other_states')}</h3>
-                  <div className="space-y-2">
+                <div className="space-y-2">
                     {states
                       .filter(s => s.id !== state.id)
                       .slice(0, 5)
                       .map((otherState) => (
-                        <Link
+                      <Link
                           key={otherState.id}
                           to={`/state/${otherState.slug}`}
                           className="block text-sm text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                         >
                           {language === 'hi' && otherState.name_hi ? otherState.name_hi : otherState.name}
-                        </Link>
+                      </Link>
                       ))}
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
             )}
 
             {/* Ad Slot 6 - State pages sidebar */}

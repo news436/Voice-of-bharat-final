@@ -31,11 +31,11 @@ export const LiveNewsSection = ({ articles }: LiveNewsSectionProps) => {
                 <img
                   src={article.featured_image_url}
                   alt={title}
-                  className="w-full h-96 object-cover"
+                  className="w-full h-auto object-cover"
                 />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-red-600 text-white text-lg font-bold p-2 px-4 rounded-md animate-pulse">
-                    LIVE
+                    {t('live.badge')}
                   </Badge>
                 </div>
               </div>
@@ -60,14 +60,23 @@ export const LiveNewsSection = ({ articles }: LiveNewsSectionProps) => {
       <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-red-500 rounded-lg">
         <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
           <CardContent className="p-4">
+            {article.featured_image_url && (
+              <div className="mb-2">
+                <img
+                  src={article.featured_image_url}
+                  alt={title}
+                  className="w-full h-auto object-cover rounded"
+                />
+              </div>
+            )}
             <div className="flex items-center mb-2">
               <span className="text-red-500 mr-2">●</span>
               <h3 className="font-semibold text-black dark:text-white line-clamp-2">{title}</h3>
             </div>
-             <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                <Calendar className="h-3 w-3 mr-1" />
-                <span>{new Date(article.published_at).toLocaleDateString()}</span>
-              </div>
+            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+              <Calendar className="h-3 w-3 mr-1" />
+              <span>{new Date(article.published_at).toLocaleDateString()}</span>
+            </div>
           </CardContent>
         </Card>
       </Link>

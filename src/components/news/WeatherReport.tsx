@@ -22,6 +22,43 @@ const getWeatherPhenomenon = (code: number) => {
   return { icon: Sun, label: 'Sunny', bg: 'bg-gradient-to-br from-blue-400 to-blue-600' };
 };
 
+// Presentational WeatherCard component
+interface WeatherCardProps {
+  city: string;
+  date: string;
+  temperature: number;
+  weatherLabel: string;
+  windSpeed: number;
+  WeatherIcon: React.ElementType;
+  weatherBg: string;
+}
+
+const WeatherCard = ({ city, date, temperature, weatherLabel, windSpeed, WeatherIcon, weatherBg }: WeatherCardProps) => (
+  <Card className={`w-full text-white shadow-lg rounded-2xl overflow-hidden ${weatherBg}`}>
+    <CardContent className="p-8 sm:p-0 flex flex-col justify-between h-full">
+      <div className="flex justify-between items-start">
+        <div>
+          <p className="text-xl font-bold">{city}</p>
+          <p className="text-sm opacity-80">{date}</p>
+        </div>
+        <div className="text-right">
+          <WeatherIcon className="w-12 h-12 drop-shadow-lg" />
+        </div>
+      </div>
+      <div className="flex justify-center items-center my-4">
+        <p className="text-6xl font-black tracking-tighter drop-shadow-lg">{Math.round(temperature)}°</p>
+      </div>
+      <div className="flex justify-between items-end mt-auto">
+        <p className="text-base font-medium">{weatherLabel}</p>
+        <div className="flex items-center gap-2 text-sm">
+          <Wind className="w-5 h-5" />
+          <span>{windSpeed.toFixed(1)} km/h</span>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const WeatherReport = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [location, setLocation] = useState<{ latitude: number, longitude: number } | null>(null);
@@ -82,41 +119,27 @@ const WeatherReport = () => {
 
   const { icon: WeatherIcon, label: weatherLabel, bg: weatherBg } = weather ? getWeatherPhenomenon(weather.current.weather_code) : getWeatherPhenomenon(0);
 
+  if (weather && !error) {
+    return (
+      <WeatherCard
+        city={city}
+        date={new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        temperature={weather.current.temperature_2m}
+        weatherLabel={weatherLabel}
+        windSpeed={weather.current.wind_speed_10m}
+        WeatherIcon={WeatherIcon}
+        weatherBg={weatherBg}
+      />
+    );
+  } else {
   return (
     <Card className={`w-full text-white shadow-lg rounded-2xl overflow-hidden ${weatherBg}`}>
-      <CardContent className="p-6 flex flex-col justify-between h-full">
-        {weather && !error ? (
-          <>
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xl font-bold">{city}</p>
-                <p className="text-sm opacity-80">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-              </div>
-              <div className="text-right">
-                <WeatherIcon className="w-12 h-12 drop-shadow-lg" />
-              </div>
-            </div>
-
-            <div className="flex justify-center items-center my-4">
-              <p className="text-6xl font-black tracking-tighter drop-shadow-lg">{Math.round(weather.current.temperature_2m)}°</p>
-            </div>
-
-            <div className="flex justify-between items-end mt-auto">
-              <p className="text-base font-medium">{weatherLabel}</p>
-              <div className="flex items-center gap-2 text-sm">
-                <Wind className="w-5 h-5" />
-                <span>{weather.current.wind_speed_10m.toFixed(1)} km/h</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-48">
+        <CardContent className="p-8 sm:p-0 flex flex-col justify-center items-center h-full min-h-[200px]">
              <p>{error || 'Loading weather...'}</p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
+  }
 };
 
 export default WeatherReport; 

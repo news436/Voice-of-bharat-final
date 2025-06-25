@@ -46,7 +46,7 @@ export const CategorySection = ({ category, articles }: CategorySectionProps) =>
                   <img
                     src={article.featured_image_url}
                     alt={article.title}
-                      className="w-full h-44 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-auto object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
                   />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-t-2xl" />
                   </div>

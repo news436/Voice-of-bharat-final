@@ -134,31 +134,33 @@ export const MoreArticlesSection = ({ currentArticleId, currentArticleSlug }: Mo
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
                   {/* Article Image */}
                   <div className="lg:col-span-1">
-                    <div className="relative h-64 lg:h-full overflow-hidden">
-                      {article.featured_image_url ? (
-                        <img
-                          src={article.featured_image_url}
-                          alt={title}
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center">
-                          <span className="text-4xl text-gray-500 dark:text-gray-400">📰</span>
+                    <Link to={`/article/${article.slug}`} className="block h-full">
+                      <div className="relative h-64 lg:h-full overflow-hidden">
+                        {article.featured_image_url ? (
+                          <img
+                            src={article.featured_image_url}
+                            alt={title}
+                            className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center">
+                            <span className="text-4xl text-gray-500 dark:text-gray-400">📰</span>
+                          </div>
+                        )}
+                        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                          {article.is_breaking && (
+                            <Badge variant="destructive" className="animate-pulse">
+                              Breaking
+                            </Badge>
+                          )}
+                          {article.is_featured && (
+                            <Badge className="bg-yellow-500 text-black">
+                              Featured
+                            </Badge>
+                          )}
                         </div>
-                      )}
-                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                        {article.is_breaking && (
-                          <Badge variant="destructive" className="animate-pulse">
-                            Breaking
-                          </Badge>
-                        )}
-                        {article.is_featured && (
-                          <Badge className="bg-yellow-500 text-black">
-                            Featured
-                          </Badge>
-                        )}
                       </div>
-                    </div>
+                    </Link>
                   </div>
 
                   {/* Article Content */}
@@ -174,11 +176,6 @@ export const MoreArticlesSection = ({ currentArticleId, currentArticleSlug }: Mo
                           <Calendar className="h-4 w-4" />
                           <span>{formatRelativeTime(article.published_at)}</span>
                         </div>
-                        {article.categories && (
-                          <Badge variant="outline" className="border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
-                            {article.categories.name}
-                          </Badge>
-                        )}
                       </div>
 
                       {/* Article Title */}

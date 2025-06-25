@@ -3,12 +3,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Radio, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LiveStreamSectionProps {
   streams: any[];
 }
 
 export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
+  const { t } = useLanguage();
+  
   if (streams.length === 0) return null;
 
   return (
@@ -16,7 +19,7 @@ export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-black dark:text-white mb-2 inline-block relative">
           <Radio className="h-6 w-6 text-black dark:text-white mr-2 inline-block" />
-        Live Now
+          {t('live.now')}
           <span className="block h-1 bg-red-600 rounded-full mt-1 w-full" style={{ maxWidth: '100%' }} />
       </h2>
       </div>
@@ -41,7 +44,7 @@ export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
                 <div className="absolute top-2 left-2">
                   <Badge className="bg-black text-white animate-pulse">
                     <Radio className="h-3 w-3 mr-1" />
-                    LIVE
+                    {t('live.badge')}
                   </Badge>
                 </div>
               </div>
@@ -55,7 +58,7 @@ export const LiveStreamSection = ({ streams }: LiveStreamSectionProps) => {
                     Started: {new Date(stream.created_at).toLocaleTimeString()}
                   </span>
                   <Button size="sm" className="bg-black text-white hover:bg-gray-900">
-                    Watch Now
+                    {t('watch.now')}
                     <ExternalLink className="h-4 w-4 ml-1" />
                   </Button>
                 </div>

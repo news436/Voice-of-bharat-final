@@ -68,6 +68,7 @@ export type Database = {
           summary: string | null
           title: string
           updated_at: string
+          youtube_video_url: string | null
         }
         Insert: {
           author_id: string
@@ -89,6 +90,7 @@ export type Database = {
           summary?: string | null
           title: string
           updated_at?: string
+          youtube_video_url?: string | null
         }
         Update: {
           author_id?: string
@@ -110,6 +112,7 @@ export type Database = {
           summary?: string | null
           title?: string
           updated_at?: string
+          youtube_video_url?: string | null
         }
         Relationships: [
           {
@@ -397,6 +400,117 @@ export type Database = {
           detailed_content?: string | null;
           hero_image_url?: string | null;
           team_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      },
+      about_us_team_members: {
+        Row: {
+          id: string;
+          name: string;
+          name_hi: string | null;
+          role: string;
+          role_hi: string | null;
+          image_url: string | null;
+          ordering: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          name_hi?: string | null;
+          role: string;
+          role_hi?: string | null;
+          image_url?: string | null;
+          ordering: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          name_hi?: string | null;
+          role?: string;
+          role_hi?: string | null;
+          image_url?: string | null;
+          ordering?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      },
+      support_details: {
+        Row: {
+          id: number;
+          description: string;
+          description_hi: string;
+          account_holder_name: string;
+          account_holder_name_hi: string;
+          account_number: string;
+          ifsc_code: string;
+          bank_name: string;
+          qr_code_image_url: string;
+          upi_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          description: string;
+          description_hi: string;
+          account_holder_name: string;
+          account_holder_name_hi: string;
+          account_number: string;
+          ifsc_code: string;
+          bank_name: string;
+          qr_code_image_url: string;
+          upi_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          description?: string;
+          description_hi?: string;
+          account_holder_name?: string;
+          account_holder_name_hi?: string;
+          account_number?: string;
+          ifsc_code?: string;
+          bank_name?: string;
+          qr_code_image_url?: string;
+          upi_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      },
+      socials: {
+        Row: {
+          id: string;
+          facebook_url: string;
+          twitter_url: string;
+          youtube_url: string;
+          instagram_url: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          facebook_url: string;
+          twitter_url: string;
+          youtube_url: string;
+          instagram_url: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          facebook_url?: string;
+          twitter_url?: string;
+          youtube_url?: string;
+          instagram_url?: string;
           created_at?: string;
           updated_at?: string;
         };

@@ -16,6 +16,11 @@ import {
   Users,
   Info,
   Heart,
+  Sun,
+  Moon,
+  Globe,
+  AlertTriangle,
+  Star,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,8 +32,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTheme } from '@/contexts/ThemeContext';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -74,10 +80,13 @@ export const AdminLayout = ({
   onSignOut
 }: AdminLayoutProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const menuItems = [
     { id: 'dashboard' as AdminSection, label: 'Dashboard', icon: Home },
     { id: 'articles' as AdminSection, label: 'Articles', icon: Newspaper },
+    { id: 'breakingnews' as AdminSection, label: 'Breaking News', icon: AlertTriangle },
+    { id: 'featured' as AdminSection, label: 'Featured Articles', icon: Star },
     { id: 'categories' as AdminSection, label: 'Categories', icon: Tags },
     { id: 'states' as AdminSection, label: 'States', icon: Package },
     { id: 'videos' as AdminSection, label: 'Videos', icon: Video },
@@ -85,6 +94,7 @@ export const AdminLayout = ({
     { id: 'admanager' as AdminSection, label: 'Ad Manager', icon: BarChart3 },
     { id: 'about' as AdminSection, label: 'About Us', icon: Info },
     { id: 'support' as AdminSection, label: 'Support Details', icon: Heart },
+    { id: 'socials' as AdminSection, label: 'Social Links', icon: Globe },
   ];
   
   const SidebarContent = () => (
@@ -93,7 +103,7 @@ export const AdminLayout = ({
         {menuItems.map(item => (
           <NavLink key={item.id} {...item} activeSection={activeSection} onSectionChange={onSectionChange} isCollapsed={isCollapsed} />
         ))}
-      </div>
+       </div>
     </div>
   );
 
@@ -137,6 +147,16 @@ export const AdminLayout = ({
           <div className="relative ml-auto flex-1 md:grow-0">
             {/* Can add search here later if needed */}
           </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="text-black dark:text-white hover:text-yellow-300 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-all duration-200"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

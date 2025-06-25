@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Info, ArrowRight } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const AboutUsSection = () => {
+  const { t } = useLanguage();
   const [shortDescription, setShortDescription] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,14 +46,14 @@ export const AboutUsSection = () => {
             <Info className="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-            About Voice of Bharat
+            {t('about.voice_of_bharat')}
           </h2>
           <p className="max-w-2xl text-gray-600 dark:text-gray-300 mb-8 text-lg">
             {shortDescription || "We are a dedicated team committed to bringing you the latest and most accurate news. Our mission is to be the voice of the people, for the people."}
           </p>
           <Button asChild size="lg" className="group bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-full transition-transform transform hover:scale-105">
             <Link to="/about-us">
-              Learn More
+              {t('learn.more')}
               <ArrowRight className="h-5 w-5 ml-2 transition-transform group-hover:translate-x-1" />
             </Link>
           </Button>

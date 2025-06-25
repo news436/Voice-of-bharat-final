@@ -13,9 +13,12 @@ import { StateManager } from '@/components/admin/StateManager';
 import { AdManager } from '@/components/admin/AdManager';
 import { AboutUsManager } from '@/components/admin/AboutUsManager';
 import SupportDetailsManager from '@/components/admin/SupportDetailsManager';
+import { SocialsManager } from '@/components/admin/SocialsManager';
 import { toast } from '@/hooks/use-toast';
+import { BreakingNewsManager } from '@/components/admin/BreakingNewsManager';
+import { FeaturedArticlesManager } from '@/components/admin/FeaturedArticlesManager';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured';
 
 const Admin = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -93,6 +96,10 @@ const Admin = () => {
         return <AdminDashboard onQuickAction={handleSectionChange} userProfile={userProfile} />;
       case 'articles':
         return <ArticleManager />;
+      case 'breakingnews':
+        return <BreakingNewsManager />;
+      case 'featured':
+        return <FeaturedArticlesManager />;
       case 'categories':
         return <CategoryManager />;
       case 'videos':
@@ -109,6 +116,8 @@ const Admin = () => {
         return <AboutUsManager />;
       case 'support':
         return <SupportDetailsManager />;
+      case 'socials':
+        return <SocialsManager />;
       default:
         return <AdminDashboard onQuickAction={handleSectionChange} userProfile={userProfile} />;
     }

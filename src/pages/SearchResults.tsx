@@ -94,11 +94,6 @@ const SearchResults = () => {
                             )}
                             <div className="p-4 space-y-2 flex-1 flex flex-col">
                               <div className="flex items-center space-x-2">
-                                {article.categories && (
-                                  <Badge variant="outline" className="border-black text-black">
-                                    {language === 'hi' && article.categories.name_hi ? article.categories.name_hi : article.categories.name}
-                                  </Badge>
-                                )}
                                 {article.is_breaking && (
                                   <Badge variant="destructive">Breaking</Badge>
                                 )}
@@ -145,11 +140,6 @@ const SearchResults = () => {
                             )}
                             <div className="p-4 space-y-2 flex-1 flex flex-col">
                               <div className="flex items-center space-x-2">
-                                {article.categories && (
-                                  <Badge variant="outline" className="border-black text-black">
-                                    {language === 'hi' && article.categories.name_hi ? article.categories.name_hi : article.categories.name}
-                                  </Badge>
-                                )}
                                 {article.is_breaking && (
                                   <Badge variant="destructive">Breaking</Badge>
                                 )}

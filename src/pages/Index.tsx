@@ -11,10 +11,12 @@ import { VideoSection } from '@/components/news/VideoSection';
 import WeatherReport from '@/components/news/WeatherReport';
 import StockWidget from '@/components/news/StockWidget';
 import { FeaturedArticles } from '@/components/news/FeaturedArticles';
-import { Calendar } from 'lucide-react';
+import { Calendar, Users } from 'lucide-react';
 import { AdSlot } from '@/components/news/AdSlot';
 import { AboutUsSection } from '@/components/news/AboutUsSection';
 import { NewsletterSection } from '@/components/news/NewsletterSection';
+import { useAuth } from '@/hooks/useAuth';
+import { formatDistanceToNow } from 'date-fns';
 
 const Index = () => {
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
@@ -26,6 +28,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const { language, t } = useLanguage();
+  const { userProfile } = useAuth();
 
   const ARTICLES_PER_PAGE = 8;
 
@@ -87,6 +90,17 @@ const Index = () => {
     fetchRecentArticles(nextPage);
   };
 
+  function formatShortTimeAgo(dateString: string) {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    return date.toLocaleDateString();
+  }
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-10">
@@ -141,36 +155,27 @@ const Index = () => {
                   {recentArticles.map((article) => {
                     const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
                     return (
-                      <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
-                       <Card className="hover:shadow-2xl transition-shadow cursor-pointer h-full flex flex-col relative overflow-hidden border border-gray-200 dark:border-gray-700">
-                         <CardContent className="flex-1 flex flex-col p-0">
-                            {article.featured_image_url && (
-                             <div className="relative">
-                              <img
-                                src={article.featured_image_url}
-                                alt={title}
-                                 className="w-full h-48 object-cover"
-                              />
-                             </div>
-                            )}
-                            <div className="p-4 space-y-2 flex-1 flex flex-col">
-                              <div className="flex items-center space-x-2">
-                                {article.categories && (
-                                 <Badge variant="outline" className="border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-xs font-medium px-2 py-0.5 rounded-md">
-                                    {article.categories.name}
-                                  </Badge>
-                                )}
-                              </div>
-                              <h3 className="font-semibold leading-tight line-clamp-2 text-black dark:text-white">
-                                {title}
-                              </h3>
-                              <div className="flex items-center text-sm text-gray-500 mt-auto">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                <span>{new Date(article.published_at).toLocaleDateString()}</span>
-                              </div>
+                      <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-xl">
+                        <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
+                          {article.featured_image_url && (
+                            <img
+                              src={article.featured_image_url}
+                              alt={title}
+                              className="w-full h-28 md:h-40 lg:h-48 object-cover"
+                            />
+                          )}
+                          <div className="p-3 flex-1 flex flex-col">
+                            <h3 className="font-bold text-sm mb-1 line-clamp-2 text-black dark:text-white">
+                              {title}
+                            </h3>
+                            <div className="flex items-center text-xs text-gray-500 mt-auto whitespace-nowrap overflow-hidden text-ellipsis">
+                              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                              <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                              <span className="mx-1">·</span>
+                              <span>{formatShortTimeAgo(article.published_at)}</span>
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </div>
                       </Link>
                     );
                   })}
@@ -214,3 +219,4 @@ const Index = () => {
 };
 
 export default Index;
+

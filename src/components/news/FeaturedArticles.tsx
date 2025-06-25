@@ -61,38 +61,32 @@ export const FeaturedArticles = ({ articles }: FeaturedArticlesProps) => {
         {/* Main Featured Article (Slider) */}
         <div className="transition-all duration-700 ease-in-out">
           <Link to={`/article/${mainArticle.slug}`}>
-            <Card className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 shadow hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer overflow-hidden flex flex-col p-0">
+            <Card className="border-none shadow-none bg-transparent p-0 m-0 h-96 overflow-hidden flex flex-col">
               {mainArticle.featured_image_url && (
-                <div className="relative w-full flex items-center justify-center overflow-hidden rounded-t-2xl h-64">
+                <div className="relative w-full h-full flex items-end justify-center overflow-hidden rounded-2xl">
                   <img
                     src={mainArticle.featured_image_url}
                     alt={mainTitle}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    className="w-full h-full object-cover"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <div className="absolute bottom-0 left-0 w-full p-4 pb-6">
+                    <h3 className="text-xl sm:text-2xl font-extrabold leading-tight text-white drop-shadow-lg line-clamp-2">
+                      {mainTitle}
+                    </h3>
+                    {mainSummary && (
+                      <p className="text-white text-sm line-clamp-1 opacity-90 mt-1">
+                        {mainSummary}
+                      </p>
+                    )}
+                  </div>
                   <div className="absolute top-2 left-2 flex items-center gap-2 z-10">
                     {mainArticle.categories && (
                       <Badge className="bg-black text-white border border-white/20 text-xs px-3 py-1 rounded-full font-semibold tracking-wide opacity-80 shadow">{mainArticle.categories.name}</Badge>
                     )}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 </div>
               )}
-              <CardContent className="flex-1 flex flex-col justify-center p-4 sm:p-6">
-                <h3 className="text-xl sm:text-2xl font-extrabold mb-2 leading-tight text-black dark:text-white line-clamp-2">
-                  {mainTitle}
-                </h3>
-                {mainSummary && (
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 text-sm sm:text-base">
-                    {mainSummary}
-                  </p>
-                )}
-                <div className="flex items-center gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(mainArticle.published_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           </Link>
           {/* Dots navigation */}
