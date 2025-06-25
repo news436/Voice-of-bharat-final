@@ -1,6 +1,9 @@
 // API Client for Render Backend
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com/api';
 
+// Log which API URL is being used
+console.log('🔗 API Client initialized with URL:', API_BASE_URL);
+
 class ApiClient {
   constructor() {
     this.baseURL = API_BASE_URL;
@@ -9,6 +12,9 @@ class ApiClient {
   // Generic request method
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Log API calls for debugging
+    console.log('🌐 Making API call to:', url);
     
     const config = {
       headers: {
