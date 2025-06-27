@@ -1,7 +1,7 @@
 // URL Shortening Utility
 // This generates short URLs similar to Aaj Tak's format (e.g., https://intdy.in/hk9q6f)
 
-const SHORT_URL_BASE = import.meta.env.VITE_SHORT_URL_BASE || 'https://vob.in';
+const SHORT_URL_BASE = import.meta.env.VITE_SHORT_URL_BASE || 'https://voiceofbharat.live';
 
 // Generate a short ID (6 characters like Aaj Tak)
 function generateShortId(): string {

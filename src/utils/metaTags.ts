@@ -71,7 +71,7 @@ export function resetMetaTags() {
     title: 'Voice Of Bharat - Latest News & Updates',
     description: 'Voice Of Bharat brings you the latest news, videos, and updates from across India. Stay informed with breaking news, in-depth articles, and more.',
     image: '/logo.png',
-    url: window.location.origin,
+    url: 'https://voiceofbharat.live',
     type: 'website',
     siteName: 'Voice of Bharat',
     twitterHandle: '@voiceofbharat'
