@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
       .select(`
         *,
         categories(name, slug),
-        states(name),
+        states(name, slug),
         profiles(full_name, avatar_url)
       `)
       .eq('status', 'published')
@@ -22,11 +22,29 @@ router.get('/', async (req, res) => {
       .range(offset, offset + limit - 1);
     
     if (category) {
-      query = query.eq('categories.slug', category);
+      // First get the category ID by slug
+      const { data: categoryData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', category)
+        .single();
+      
+      if (categoryData) {
+        query = query.eq('category_id', categoryData.id);
+      }
     }
     
     if (state) {
-      query = query.eq('states.slug', state);
+      // First get the state ID by slug
+      const { data: stateData } = await supabase
+        .from('states')
+        .select('id')
+        .eq('slug', state)
+        .single();
+      
+      if (stateData) {
+        query = query.eq('state_id', stateData.id);
+      }
     }
     
     const { data, error, count } = await query;
