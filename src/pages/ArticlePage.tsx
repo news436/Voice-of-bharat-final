@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
@@ -26,10 +26,13 @@ const ArticlePage = () => {
   const shareDropdownRef = useRef<HTMLDivElement>(null);
 
   // Share functions
-  const copyToClipboard = async () => {
+  const copyArticleLink = async () => {
     try {
       const shortUrl = await getShortUrl(article.id);
-      await navigator.clipboard.writeText(shortUrl);
+      
+      // Use the mobile-friendly clipboard utility
+      await copyToClipboard(shortUrl);
+      
       setCopied(true);
       toast({
         title: "Link copied!",
@@ -38,6 +41,7 @@ const ArticlePage = () => {
       setTimeout(() => setCopied(false), 2000);
       setShowShareDropdown(false);
     } catch (err) {
+      console.error('Copy failed:', err);
       toast({
         title: "Failed to copy",
         description: "Please copy the link manually.",
@@ -52,6 +56,7 @@ const ArticlePage = () => {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
       const imageUrl = article.featured_image_url;
       
+      // Use the improved WhatsApp sharing function
       await shareToWhatsApp(title, shortUrl, imageUrl);
       setShowShareDropdown(false);
     } catch (err) {
@@ -102,7 +107,9 @@ const ArticlePage = () => {
       const text = generateSocialShareText(title, shortUrl, 'instagram');
       
       // Instagram doesn't support direct URL sharing, so we copy to clipboard
-      await navigator.clipboard.writeText(text);
+      // Use the mobile-friendly clipboard utility
+      await copyToClipboard(text);
+      
       toast({
         title: "Ready for Instagram!",
         description: "Article details copied to clipboard. You can now paste this in your Instagram story or post.",
@@ -124,10 +131,13 @@ const ArticlePage = () => {
         const shortUrl = await getShortUrl(article.id);
         const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
         const text = generateSocialShareText(title, shortUrl);
+        
+        // For Web Share API, only include text (which already contains the URL)
+        // Don't include url parameter to avoid duplication
         await navigator.share({
           title: title,
           text: text,
-          url: shortUrl,
+          // url: shortUrl, // Removed to avoid duplicate URLs
         });
       } catch (err) {
         // Fallback to dropdown if native share fails
@@ -170,24 +180,34 @@ const ArticlePage = () => {
       try {
         let response;
         
+        console.log('🔍 Fetching article with params:', { slug, id });
+        
         // Use appropriate API call based on parameter
         if (id) {
           // Fetch by ID
+          console.log('📰 Fetching article by ID:', id);
           response = await apiClient.getArticleById(id);
         } else if (slug) {
           // Fetch by slug
+          console.log('📰 Fetching article by slug:', slug);
           response = await apiClient.getArticle(slug);
         } else {
+          console.log('❌ No slug or id provided');
           setNotFound(true);
           setLoading(false);
           return;
         }
 
+        console.log('📡 API Response:', response);
+
         if (!response.success || !response.data) {
+          console.log('❌ Article not found or API error:', response);
           setNotFound(true);
           setLoading(false);
           return;
         }
+        
+        console.log('✅ Article found:', response.data.title);
         setArticle(response.data);
         
         // Update meta tags for social media sharing
@@ -418,7 +438,7 @@ const ArticlePage = () => {
                       variant="outline" 
                       size="sm" 
                       className="gap-2" 
-                      onClick={copyToClipboard}
+                      onClick={copyArticleLink}
                     >
                       {copied ? (
                         <Check className="h-4 w-4 text-green-600" />

@@ -176,6 +176,53 @@ router.get('/id/:id', async (req, res) => {
   }
 });
 
+// Search articles (must come before /:slug to avoid conflicts)
+router.get('/search', async (req, res) => {
+  try {
+    const { q, page = 1, limit = 10 } = req.query;
+    const offset = (page - 1) * limit;
+    
+    if (!q) {
+      return res.status(400).json({
+        success: false,
+        error: 'Search query is required'
+      });
+    }
+    
+    const { data, error, count } = await supabase
+      .from('articles')
+      .select(`
+        id, slug, title, title_hi, summary, summary_hi,
+        featured_image_url, published_at,
+        categories(name, slug),
+        profiles(full_name)
+      `)
+      .or(`title.ilike.%${q}%,summary.ilike.%${q}%,title_hi.ilike.%${q}%,summary_hi.ilike.%${q}%`)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    if (error) throw error;
+    
+    res.json({
+      success: true,
+      data,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: count || data.length,
+        pages: Math.ceil((count || data.length) / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error searching articles:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search articles'
+    });
+  }
+});
+
 // Get article by slug
 router.get('/:slug', async (req, res) => {
   try {
@@ -262,53 +309,6 @@ router.get('/:slug/related', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch related articles'
-    });
-  }
-});
-
-// Search articles
-router.get('/search', async (req, res) => {
-  try {
-    const { q, page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
-    
-    if (!q) {
-      return res.status(400).json({
-        success: false,
-        error: 'Search query is required'
-      });
-    }
-    
-    const { data, error, count } = await supabase
-      .from('articles')
-      .select(`
-        id, slug, title, title_hi, summary, summary_hi,
-        featured_image_url, published_at,
-        categories(name, slug),
-        profiles(full_name)
-      `)
-      .or(`title.ilike.%${q}%,summary.ilike.%${q}%,title_hi.ilike.%${q}%,summary_hi.ilike.%${q}%`)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-    
-    if (error) throw error;
-    
-    res.json({
-      success: true,
-      data,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: count || data.length,
-        pages: Math.ceil((count || data.length) / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Error searching articles:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to search articles'
     });
   }
 });

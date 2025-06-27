@@ -125,8 +125,10 @@ router.post('/create', async (req, res) => {
 router.get('/:shortId', async (req, res) => {
   try {
     const { shortId } = req.params;
+    console.log('🔗 Redirect request for short ID:', shortId);
 
     if (!shortId || shortId.length !== 6) {
+      console.log('❌ Invalid short ID length:', shortId?.length);
       return res.status(400).json({
         success: false,
         error: 'Invalid short ID'
@@ -144,11 +146,15 @@ router.get('/:shortId', async (req, res) => {
       .single();
 
     if (error || !shortUrl) {
+      console.log('❌ Short URL not found:', shortId, error);
       return res.status(404).json({
         success: false,
         error: 'Short URL not found'
       });
     }
+
+    console.log('✅ Found short URL:', shortUrl);
+    console.log('📰 Article ID:', shortUrl.articles.id);
 
     // Increment click count
     await supabase
@@ -156,12 +162,13 @@ router.get('/:shortId', async (req, res) => {
       .update({ clicks: shortUrl.clicks + 1 })
       .eq('id', shortUrl.id);
 
-    // Redirect to the article using article ID
-    const articleUrl = `${process.env.FRONTEND_URL || 'https://voiceofbharat.live'}/article/${shortUrl.articles.id}`;
+    // Redirect to the article using article ID with correct route format
+    const articleUrl = `${process.env.FRONTEND_URL || 'https://voiceofbharat.live'}/article/id/${shortUrl.articles.id}`;
+    console.log('🔄 Redirecting to:', articleUrl);
     
     res.redirect(301, articleUrl);
   } catch (error) {
-    console.error('Error redirecting short URL:', error);
+    console.error('❌ Error redirecting short URL:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to redirect short URL'

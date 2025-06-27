@@ -56,6 +56,36 @@ export async function getShortUrl(articleId: string): Promise<string> {
   }
 }
 
+// Mobile-friendly clipboard copy utility
+export async function copyToClipboard(text: string): Promise<void> {
+  // Try modern clipboard API first
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(text);
+  } else {
+    // Fallback for mobile devices
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (!successful) {
+        throw new Error('Copy command failed');
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      throw err;
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  }
+}
+
 // Generate formatted social sharing text
 export function generateSocialShareText(articleTitle: string, shortUrl: string, platform: 'whatsapp' | 'twitter' | 'instagram' | 'facebook' = 'twitter'): string {
   const maxLength = platform === 'twitter' ? 280 : 1000; // Twitter has character limit
@@ -109,10 +139,12 @@ export async function shareToWhatsApp(articleTitle: string, shortUrl: string, im
   // Try Web Share API first (best for mobile)
   if (navigator.share) {
     try {
+      // For Web Share API, only include text (which already contains the URL)
+      // Don't include url parameter to avoid duplication
       await navigator.share({
         title: articleTitle,
         text: text,
-        url: shortUrl,
+        // url: shortUrl, // Removed to avoid duplicate URLs
       });
       return;
     } catch (error) {
