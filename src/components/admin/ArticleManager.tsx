@@ -14,7 +14,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { isValidYoutubeUrl, getYoutubeEmbedUrl } from '@/lib/youtube-utils';
-import { isValidFacebookUrl, getFacebookEmbedUrl } from '@/lib/facebook-utils';
 import apiClient from '@/utils/api';
 
 const ReactQuill = lazy(() =>
@@ -50,7 +49,6 @@ type ArticleFormData = {
   content_hi: string;
   featured_image_url: string;
   youtube_video_url: string;
-  facebook_video_url: string;
   status: 'draft' | 'published' | 'archived';
   is_breaking: boolean;
   is_featured: boolean;
@@ -71,7 +69,7 @@ export const ArticleManager = () => {
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
-    featured_image_url: '', youtube_video_url: '', facebook_video_url: '', status: 'draft', is_breaking: false, is_featured: false,
+    featured_image_url: '', youtube_video_url: '', status: 'draft', is_breaking: false, is_featured: false,
     category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
     publisher_name: ''
   });
@@ -201,7 +199,6 @@ export const ArticleManager = () => {
       meta_keywords: article.meta_keywords || '',
       publisher_name: article.publisher_name || article.profiles?.full_name || '',
       youtube_video_url: article.youtube_video_url || '',
-      facebook_video_url: article.facebook_video_url || ''
     });
     setShowForm(true);
     setImageFile(null);
@@ -226,7 +223,7 @@ export const ArticleManager = () => {
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: '', youtube_video_url: '', facebook_video_url: ''
+      publisher_name: '', youtube_video_url: '',
     });
     setImageFile(null);
     setImagePreview(null);
@@ -239,7 +236,7 @@ export const ArticleManager = () => {
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: '', youtube_video_url: '', facebook_video_url: ''
+      publisher_name: '', youtube_video_url: '',
     });
   };
 
@@ -480,40 +477,6 @@ export const ArticleManager = () => {
                         {formData.youtube_video_url && !isValidYoutubeUrl(formData.youtube_video_url) && (
                           <div className="mt-2">
                             <p className="text-xs text-red-600 dark:text-red-400">⚠ Invalid YouTube URL format</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="facebook_video_url">Facebook Video URL</Label>
-                        <Input 
-                          id="facebook_video_url"
-                          type="url" 
-                          placeholder="https://www.facebook.com/share/v/..." 
-                          value={formData.facebook_video_url} 
-                          onChange={e => setFormData({...formData, facebook_video_url: e.target.value})} 
-                        />
-                        <p className="text-xs text-muted-foreground">Optional: Add a Facebook video URL to embed in the article. The video will be displayed within the article content.</p>
-                        
-                        {/* Facebook Video Preview */}
-                        {formData.facebook_video_url && isValidFacebookUrl(formData.facebook_video_url) && (
-                          <div className="mt-4">
-                            <p className="text-xs text-green-600 dark:text-green-400 mb-2">✓ Valid Facebook URL - Preview:</p>
-                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                              <iframe
-                                src={getFacebookEmbedUrl(formData.facebook_video_url) || ''}
-                                title="Facebook video preview"
-                                className="absolute top-0 left-0 w-full h-full rounded-lg border"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                              />
-                            </div>
-                          </div>
-                        )}
-                        
-                        {formData.facebook_video_url && !isValidFacebookUrl(formData.facebook_video_url) && (
-                          <div className="mt-2">
-                            <p className="text-xs text-red-600 dark:text-red-400">⚠ Invalid Facebook URL format</p>
                           </div>
                         )}
                       </div>

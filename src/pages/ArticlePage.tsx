@@ -287,17 +287,6 @@ const ArticlePage = () => {
                 </h1>
               )}
 
-              {/* Video Section - Display at the beginning */}
-              {(article.youtube_video_url || article.facebook_video_url) && (
-                <div className="mb-8">
-                  <ArticleVideoPlayer 
-                    youtubeUrl={article.youtube_video_url} 
-                    facebookUrl={article.facebook_video_url}
-                    title={title} 
-                  />
-                </div>
-              )}
-
               {/* Article Content */}
               <CardContent className="p-6 sm:p-8 lg:p-12">
                 {/* Article Meta Information */}
@@ -385,6 +374,16 @@ const ArticlePage = () => {
                     prose-hr:border-gray-300 dark:prose-hr:border-gray-600"
                   dangerouslySetInnerHTML={{ __html: content }} 
                 />
+
+                {/* Video Section - Display at the bottom with reduced size */}
+                {article.youtube_video_url && (
+                  <div className="mt-8">
+                    <ArticleVideoPlayer 
+                      youtubeUrl={article.youtube_video_url} 
+                      title={title} 
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
