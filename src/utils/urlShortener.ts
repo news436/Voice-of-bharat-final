@@ -4,7 +4,7 @@
 import apiClient from './api';
 
 const SHORT_URL_BASE = import.meta.env.VITE_SHORT_URL_BASE || 'https://voiceofbharat.live';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voiceofbharat-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
 
 interface ShortUrlResponse {
   success: boolean;
