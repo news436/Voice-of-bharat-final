@@ -48,8 +48,7 @@ const VideoPlayer = ({ video }: VideoPlayerProps) => {
     }
 
     if (video.video_type === "facebook") {
-      const finalEmbedUrl = getFacebookEmbedUrl(video.video_url);
-      if (!finalEmbedUrl || !isValidFacebookUrl(video.video_url)) {
+      if (!isValidFacebookUrl(video.video_url)) {
         return (
           <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-black text-white">
             <p>Invalid Facebook video URL.</p>
@@ -57,15 +56,15 @@ const VideoPlayer = ({ video }: VideoPlayerProps) => {
         );
       }
       return (
-        <div className="relative" style={{ paddingBottom: "56.25%" }}>
-          <iframe
-            src={finalEmbedUrl}
-            title={video.title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute top-0 left-0 h-full w-full"
-          ></iframe>
+        <div className="flex justify-center">
+          <div
+            className="fb-video"
+            data-href={video.video_url}
+            data-width="100%"
+            data-allowfullscreen="true"
+            data-show-text="false"
+            data-lazy="true"
+          ></div>
         </div>
       );
     }
