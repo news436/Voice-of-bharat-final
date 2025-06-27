@@ -18,7 +18,12 @@ export function updateMetaTags(article: any, baseUrl: string = 'https://voiceofb
   const title = article?.title_hi || article?.title || 'Voice of Bharat - Latest News';
   const description = article?.excerpt_hi || article?.excerpt || 'Latest news and updates from Voice of Bharat';
   const imageUrl = article?.featured_image_url ? `${baseUrl}${article.featured_image_url}` : `${baseUrl}/logo.png`;
-  const articleUrl = `${baseUrl}/article/${article?.slug || article?.id}`;
+  
+  // Generate correct article URL based on whether it's a slug or ID
+  const articleUrl = article?.slug 
+    ? `${baseUrl}/article/${article.slug}`
+    : `${baseUrl}/article/id/${article?.id}`;
+    
   const author = article?.author || 'Voice of Bharat';
   const publishedTime = article?.published_at ? new Date(article.published_at).toISOString() : new Date().toISOString();
   const category = article?.category?.name || 'News';

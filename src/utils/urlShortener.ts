@@ -35,12 +35,12 @@ export async function createShortUrl(articleId: string): Promise<string> {
     } else {
       console.error('Failed to create short URL:', data.error);
       // Fallback to full URL if short URL creation fails
-      return `${window.location.origin}/article/${articleId}`;
+      return `${window.location.origin}/article/id/${articleId}`;
     }
   } catch (error) {
     console.error('Error creating short URL:', error);
     // Fallback to full URL if API call fails
-    return `${window.location.origin}/article/${articleId}`;
+    return `${window.location.origin}/article/id/${articleId}`;
   }
 }
 
@@ -52,7 +52,7 @@ export async function getShortUrl(articleId: string): Promise<string> {
   } catch (error) {
     console.error('Error getting short URL:', error);
     // Fallback to full URL
-    return `${window.location.origin}/article/${articleId}`;
+    return `${window.location.origin}/article/id/${articleId}`;
   }
 }
 

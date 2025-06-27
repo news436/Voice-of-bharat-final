@@ -115,7 +115,7 @@ export const UrlShortenerManager = () => {
   };
 
   const openArticle = (articleId: string) => {
-    window.open(`/article/${articleId}`, '_blank');
+    window.open(`/article/id/${articleId}`, '_blank');
   };
 
   const openShortUrl = (shortId: string) => {

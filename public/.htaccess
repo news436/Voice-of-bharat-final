@@ -1,0 +1,14 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Redirect 6-character short URLs to backend
+  RewriteCond %{REQUEST_URI} ^/([a-zA-Z0-9]{6})$ [NC]
+  RewriteRule ^([a-zA-Z0-9]{6})$ https://voice-of-bharat-api.onrender.com/api/redirect/$1 [R=301,L]
+  
+  # Handle React Router - serve index.html for all other routes
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule> 
