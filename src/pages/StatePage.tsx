@@ -49,10 +49,10 @@ const StatePage = () => {
         // Fetch specific state using API client
         const stateResponse = await apiClient.get(`/states/${slug}`);
         if (!stateResponse.success || !stateResponse.data) {
-          setNotFound(true);
-          setLoading(false);
-          return;
-        }
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
         setState(stateResponse.data);
         
         // Fetch articles for this state using API client
@@ -75,7 +75,7 @@ const StatePage = () => {
         console.error('Error fetching state data:', error);
         setNotFound(true);
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
     fetchData();
@@ -153,7 +153,7 @@ const StatePage = () => {
                             </div>
                           </div>
                         </div>
-                      </Link>
+                    </Link>
                     );
                   })}
                 </div>
@@ -174,11 +174,11 @@ const StatePage = () => {
                         <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
                           {video.thumbnail_url && (
                             <div className="relative">
-                              <img
-                                src={video.thumbnail_url}
+                            <img
+                              src={video.thumbnail_url}
                                 alt={title}
                                 className="w-full h-28 md:h-40 lg:h-48 object-cover"
-                              />
+                            />
                               <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
                                 <Play className="h-8 w-8 text-white" />
                               </div>
@@ -196,7 +196,7 @@ const StatePage = () => {
                             </div>
                           </div>
                         </div>
-                      </Link>
+                    </Link>
                     );
                   })}
                 </div>
@@ -214,7 +214,7 @@ const StatePage = () => {
                   <h3 className="text-xl font-bold text-black dark:text-white">{state.name}</h3>
                 </div>
                 {state.description && (
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
                     {state.description}
                   </p>
                 )}
@@ -242,7 +242,7 @@ const StatePage = () => {
             </Card>
 
             {/* Other States */}
-            <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
+              <Card className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/90">
               <CardContent className="p-6">
                 <h3 className="text-lg font-bold text-black dark:text-white mb-4 flex items-center">
                   <MapPin className="h-5 w-5 text-gray-600 mr-2" />
@@ -250,9 +250,9 @@ const StatePage = () => {
                 </h3>
                 <div className="space-y-3">
                   {states.slice(0, 8).map((otherState) => (
-                    <Link 
-                      key={otherState.id} 
-                      to={`/state/${otherState.slug}`}
+                      <Link
+                          key={otherState.id}
+                          to={`/state/${otherState.slug}`}
                       className={`block p-3 rounded-lg border transition-all hover:shadow-md ${
                         otherState.slug === slug 
                           ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' 
@@ -274,8 +274,8 @@ const StatePage = () => {
                           {otherState.slug === slug ? 'Current' : 'View'}
                         </Badge>
                       </div>
-                    </Link>
-                  ))}
+                      </Link>
+                      ))}
                 </div>
               </CardContent>
             </Card>

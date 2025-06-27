@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
+import { getShortUrl } from '@/utils/urlShortener';
+import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
 const ArticlePage = () => {
@@ -25,9 +27,9 @@ const ArticlePage = () => {
 
   // Share functions
   const copyToClipboard = async () => {
-    const url = window.location.href;
+    const shortUrl = getShortUrl(article.slug);
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(shortUrl);
       setCopied(true);
       toast({
         title: "Link copied!",
@@ -45,34 +47,34 @@ const ArticlePage = () => {
   };
 
   const shareOnWhatsApp = () => {
-    const url = window.location.href;
+    const shortUrl = getShortUrl(article.slug);
     const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `Check out this article: ${title}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+    const text = `${title} via @voiceofbharat ${shortUrl}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
     setShowShareDropdown(false);
   };
 
   const shareOnFacebook = () => {
-    const url = window.location.href;
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    const shortUrl = getShortUrl(article.slug);
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}`;
     window.open(facebookUrl, '_blank', 'width=600,height=400');
     setShowShareDropdown(false);
   };
 
   const shareOnTwitter = () => {
-    const url = window.location.href;
+    const shortUrl = getShortUrl(article.slug);
     const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `Check out this article: ${title}`;
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    const text = `${title} via @voiceofbharat ${shortUrl}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, '_blank', 'width=600,height=400');
     setShowShareDropdown(false);
   };
 
   const shareOnInstagram = () => {
-    const url = window.location.href;
+    const shortUrl = getShortUrl(article.slug);
     const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `Check out this article: ${title}\n\n${url}`;
+    const text = `${title}\n\nvia @voiceofbharat\n${shortUrl}`;
     
     // Instagram doesn't support direct URL sharing, so we copy to clipboard
     navigator.clipboard.writeText(text).then(() => {
@@ -93,10 +95,11 @@ const ArticlePage = () => {
   const handleShare = () => {
     if (navigator.share) {
       // Use native share if available
+      const shortUrl = getShortUrl(article.slug);
       navigator.share({
         title: language === 'hi' && article?.title_hi ? article.title_hi : article?.title,
         text: article?.summary || 'Check out this article on Voice of Bharat',
-        url: window.location.href,
+        url: shortUrl,
       });
     } else {
       // Fallback to dropdown
@@ -142,6 +145,22 @@ const ArticlePage = () => {
         }
         setArticle(response.data);
         
+        // Update meta tags for social media sharing
+        const title = language === 'hi' && response.data.title_hi ? response.data.title_hi : response.data.title;
+        const description = language === 'hi' && response.data.summary_hi ? response.data.summary_hi : response.data.summary;
+        const image = response.data.featured_image_url || '/logo.png';
+        const shortUrl = getShortUrl(response.data.slug);
+        
+        updateMetaTags({
+          title: `${title} - Voice of Bharat`,
+          description: description || 'Latest news and updates from Voice of Bharat',
+          image: image,
+          url: shortUrl,
+          type: 'article',
+          siteName: 'Voice of Bharat',
+          twitterHandle: '@voiceofbharat'
+        });
+        
         // Fetch related articles using API client
         try {
           const relatedResponse = await apiClient.get(`/articles/${slug}/related?limit=5`);
@@ -169,7 +188,12 @@ const ArticlePage = () => {
       }
     };
     fetchArticle();
-  }, [slug]);
+    
+    // Reset meta tags when component unmounts
+    return () => {
+      resetMetaTags();
+    };
+  }, [slug, language]);
 
   if (loading) {
     return (
