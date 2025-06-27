@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Play, ExternalLink } from 'lucide-react';
+import { Play, ExternalLink, Youtube, Facebook } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VideoSectionProps {
@@ -12,6 +12,28 @@ export const VideoSection = ({ videos }: VideoSectionProps) => {
   const { t } = useLanguage();
 
   if (videos.length === 0) return null;
+
+  const getVideoTypeIcon = (videoType: string) => {
+    switch (videoType) {
+      case 'youtube':
+        return <Youtube className="h-4 w-4" />;
+      case 'facebook':
+        return <Facebook className="h-4 w-4" />;
+      default:
+        return <Play className="h-4 w-4" />;
+    }
+  };
+
+  const getVideoTypeColor = (videoType: string) => {
+    switch (videoType) {
+      case 'youtube':
+        return 'bg-red-600 hover:bg-red-700';
+      case 'facebook':
+        return 'bg-blue-600 hover:bg-blue-700';
+      default:
+        return 'bg-gray-600 hover:bg-gray-700';
+    }
+  };
 
   return (
     <section className="mb-12">
@@ -42,12 +64,14 @@ export const VideoSection = ({ videos }: VideoSectionProps) => {
                     />
                   )}
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                    <div className="bg-red-600 rounded-full p-3">
-                      <Play className="h-6 w-6 text-white fill-current" />
+                    <div className={`rounded-full p-3 ${getVideoTypeColor(video.video_type)}`}>
+                      {getVideoTypeIcon(video.video_type)}
                     </div>
                   </div>
                   <div className="absolute top-2 left-2">
-                    <Badge className="bg-red-600">{video.video_type}</Badge>
+                    <Badge className={`${video.video_type === 'youtube' ? 'bg-red-600' : 'bg-blue-600'} text-white`}>
+                      {video.video_type === 'youtube' ? 'YouTube' : 'Facebook'}
+                    </Badge>
                   </div>
                   <div className="absolute top-2 right-2">
                     <button

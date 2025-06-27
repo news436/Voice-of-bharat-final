@@ -4,6 +4,7 @@
  * - https://www.facebook.com/watch?v=VIDEO_ID
  * - https://www.facebook.com/username/videos/VIDEO_ID
  * - https://fb.watch/VIDEO_ID
+ * - https://www.facebook.com/share/v/VIDEO_ID
  */
 export function getFacebookEmbedUrl(url: string): string | null {
   if (!url) return null;
@@ -29,6 +30,12 @@ export function getFacebookEmbedUrl(url: string): string | null {
     videoId = fbWatchMatch[1];
   }
   
+  // Handle facebook.com/share/v/ format
+  const shareMatch = url.match(/facebook\.com\/share\/v\/([^&\n?#\/]+)/);
+  if (shareMatch) {
+    videoId = shareMatch[1];
+  }
+  
   if (!videoId) return null;
   
   // Return embed URL
@@ -44,7 +51,8 @@ export function isValidFacebookUrl(url: string): boolean {
   const facebookPatterns = [
     /facebook\.com\/watch\?v=/,
     /facebook\.com\/[^\/]+\/videos\//,
-    /fb\.watch\//
+    /fb\.watch\//,
+    /facebook\.com\/share\/v\//
   ];
   
   return facebookPatterns.some(pattern => pattern.test(url));
@@ -60,7 +68,8 @@ export function getFacebookVideoId(url: string): string | null {
   const patterns = [
     /facebook\.com\/watch\?v=([^&\n?#]+)/,
     /facebook\.com\/[^\/]+\/videos\/([^&\n?#\/]+)/,
-    /fb\.watch\/([^&\n?#\/]+)/
+    /fb\.watch\/([^&\n?#\/]+)/,
+    /facebook\.com\/share\/v\/([^&\n?#\/]+)/
   ];
   
   for (const pattern of patterns) {

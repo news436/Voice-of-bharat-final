@@ -1,6 +1,8 @@
 import { Play, Calendar, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect } from "react";
+import { getYoutubeEmbedUrl, isValidYoutubeUrl } from '@/lib/youtube-utils';
+import { getFacebookEmbedUrl, isValidFacebookUrl } from '@/lib/facebook-utils';
 
 declare global {
   interface Window {
@@ -8,7 +10,11 @@ declare global {
   }
 }
 
-const VideoPlayer = ({ video }) => {
+interface VideoPlayerProps {
+  video: any;
+}
+
+const VideoPlayer = ({ video }: VideoPlayerProps) => {
   useEffect(() => {
     if (window.FB) {
       window.FB.XFBML.parse();
@@ -17,27 +23,10 @@ const VideoPlayer = ({ video }) => {
 
   if (!video) return null;
 
-  const getYoutubeEmbedUrl = (url) => {
-    const regExp =
-      /(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-    const match = url.match(regExp);
-    const videoId = match ? match[1] : null;
-
-    if (!videoId) return null;
-
-    const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`);
-    embedUrl.searchParams.set("autoplay", "1");
-    embedUrl.searchParams.set("rel", "0");
-    if (typeof window !== "undefined") {
-      embedUrl.searchParams.set("origin", window.location.origin);
-    }
-    return embedUrl.toString();
-  };
-
   const renderVideo = () => {
     if (video.video_type === "youtube") {
       const finalEmbedUrl = getYoutubeEmbedUrl(video.video_url);
-      if (!finalEmbedUrl) {
+      if (!finalEmbedUrl || !isValidYoutubeUrl(video.video_url)) {
         return (
           <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-black text-white">
             <p>Invalid YouTube video URL.</p>
@@ -59,16 +48,24 @@ const VideoPlayer = ({ video }) => {
     }
 
     if (video.video_type === "facebook") {
+      const finalEmbedUrl = getFacebookEmbedUrl(video.video_url);
+      if (!finalEmbedUrl || !isValidFacebookUrl(video.video_url)) {
+        return (
+          <div className="flex aspect-video w-full items-center justify-center rounded-lg bg-black text-white">
+            <p>Invalid Facebook video URL.</p>
+          </div>
+        );
+      }
       return (
-        <div className="flex justify-center">
-          <div
-            className="fb-video"
-            data-href={video.video_url}
-            data-width="100%"
-            data-allowfullscreen="true"
-            data-show-text="false"
-            data-lazy="true"
-          ></div>
+        <div className="relative" style={{ paddingBottom: "56.25%" }}>
+          <iframe
+            src={finalEmbedUrl}
+            title={video.title}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute top-0 left-0 h-full w-full"
+          ></iframe>
         </div>
       );
     }

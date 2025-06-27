@@ -4,6 +4,10 @@
  * - https://www.youtube.com/watch?v=VIDEO_ID
  * - https://youtu.be/VIDEO_ID
  * - https://www.youtube.com/embed/VIDEO_ID
+ * - https://m.youtube.com/watch?v=VIDEO_ID
+ * - https://www.youtube.com/v/VIDEO_ID
+ * - https://youtube.com/watch?v=VIDEO_ID
+ * - https://www.youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID
  */
 export function getYoutubeEmbedUrl(url: string): string | null {
   if (!url) return null;
@@ -11,8 +15,8 @@ export function getYoutubeEmbedUrl(url: string): string | null {
   // Extract video ID from various YouTube URL formats
   let videoId: string | null = null;
   
-  // Handle youtube.com/watch?v= format
-  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+  // Handle youtube.com/watch?v= format (including mobile and with playlist)
+  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|m\.youtube\.com\/watch\?v=|youtube\.com\/v\/)([^&\n?#]+)/);
   if (watchMatch) {
     videoId = watchMatch[1];
   }
@@ -29,7 +33,7 @@ export function getYoutubeEmbedUrl(url: string): string | null {
 export function getYoutubeVideoId(url: string): string | null {
   if (!url) return null;
   
-  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|m\.youtube\.com\/watch\?v=|youtube\.com\/v\/)([^&\n?#]+)/);
   return watchMatch ? watchMatch[1] : null;
 }
 
@@ -39,6 +43,6 @@ export function getYoutubeVideoId(url: string): string | null {
 export function isValidYoutubeUrl(url: string): boolean {
   if (!url) return false;
   
-  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/;
+  const youtubeRegex = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)/;
   return youtubeRegex.test(url);
 } 

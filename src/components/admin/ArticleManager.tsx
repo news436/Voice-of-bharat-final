@@ -488,7 +488,7 @@ export const ArticleManager = () => {
                         <Input 
                           id="facebook_video_url"
                           type="url" 
-                          placeholder="https://www.facebook.com/watch?v=..." 
+                          placeholder="https://www.facebook.com/share/v/..." 
                           value={formData.facebook_video_url} 
                           onChange={e => setFormData({...formData, facebook_video_url: e.target.value})} 
                         />

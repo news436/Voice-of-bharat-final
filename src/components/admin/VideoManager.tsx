@@ -11,6 +11,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose }
 import { Label } from '@/components/ui/label';
 import { PlusCircle, MoreHorizontal, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { isValidYoutubeUrl, getYoutubeVideoId } from '@/lib/youtube-utils';
+import { isValidFacebookUrl, getFacebookVideoId } from '@/lib/facebook-utils';
 
 export const VideoManager = () => {
   const [videos, setVideos] = useState<any[]>([]);
@@ -105,10 +107,19 @@ export const VideoManager = () => {
 
   const generateThumbnail = (url: string, type: string) => {
     if (type === 'youtube') {
-      const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
-      return match ? `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg` : '';
+      const videoId = getYoutubeVideoId(url);
+      return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
     }
     return '';
+  };
+
+  const validateVideoUrl = (url: string, type: string) => {
+    if (type === 'youtube') {
+      return isValidYoutubeUrl(url);
+    } else if (type === 'facebook') {
+      return isValidFacebookUrl(url);
+    }
+    return false;
   };
 
   const handleVideoTypeChange = (type: string) => {
@@ -134,6 +145,15 @@ export const VideoManager = () => {
     if (formData.video_type === 'youtube' && url) {
       const thumbnail = generateThumbnail(url, 'youtube');
       setFormData({ ...formData, video_url: url, thumbnail_url: thumbnail });
+    }
+    
+    // Validate URL
+    if (url && !validateVideoUrl(url, formData.video_type)) {
+      toast({ 
+        title: "Invalid URL", 
+        description: `Please enter a valid ${formData.video_type === 'youtube' ? 'YouTube' : 'Facebook'} video URL.`, 
+        variant: "destructive" 
+      });
     }
   };
   
@@ -292,7 +312,19 @@ export const VideoManager = () => {
              
              <div className="space-y-2">
                <Label htmlFor="video_url">Video URL</Label>
-               <Input id="video_url" placeholder="YouTube or Facebook video URL" value={formData.video_url} onChange={e => handleVideoUrlChange(e.target.value)} required />
+               <Input 
+                 id="video_url" 
+                 placeholder={formData.video_type === 'youtube' ? "https://www.youtube.com/watch?v=..." : "https://www.facebook.com/share/v/..."} 
+                 value={formData.video_url} 
+                 onChange={e => handleVideoUrlChange(e.target.value)} 
+                 required 
+               />
+               <p className="text-xs text-muted-foreground">
+                 {formData.video_type === 'youtube' 
+                   ? 'Supports: youtube.com/watch?v=, youtu.be/, m.youtube.com/, youtube.com/v/' 
+                   : 'Supports: facebook.com/share/v/, facebook.com/watch?v=, fb.watch/'
+                 }
+               </p>
              </div>
              
              <div className="space-y-2">
