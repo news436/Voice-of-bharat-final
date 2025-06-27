@@ -20,7 +20,7 @@ interface ShortUrlResponse {
 // Create a short URL for an article using the backend API
 export async function createShortUrl(articleId: string): Promise<string> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/redirect/create`, {
+    const response = await fetch(`${API_BASE_URL}/redirect/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
