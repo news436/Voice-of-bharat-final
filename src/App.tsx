@@ -22,6 +22,7 @@ import { ScrollToTop } from "./components/utils/ScrollToTop";
 import AboutUsPage from "./pages/AboutUsPage";
 import SupportUsPage from "./pages/SupportUsPage";
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import ShortUrlRedirect from './pages/ShortUrlRedirect';
 
 const queryClient = new QueryClient();
 
@@ -43,7 +44,7 @@ const App = () => (
                 <Route path="/article/:slug" element={<MainLayout><ArticlePage /></MainLayout>} />
                 <Route path="/article/id/:id" element={<MainLayout><ArticlePage /></MainLayout>} />
                 <Route path="/state/:slug" element={<MainLayout><StatePage /></MainLayout>} />
-                <Route path="/video/:id" element={<MainLayout><VideoPage /></MainLayout>} />
+                <Route path="/video/:slug" element={<MainLayout><VideoPage /></MainLayout>} />
                 <Route path="/search" element={<MainLayout><SearchResults /></MainLayout>} />
                 <Route path="/videos" element={<MainLayout><VideoPage /></MainLayout>} />
                 <Route path="/live" element={<MainLayout><LivePage /></MainLayout>} />
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="/about-us" element={<MainLayout><AboutUsPage /></MainLayout>} />
                 <Route path="/support-us" element={<MainLayout><SupportUsPage /></MainLayout>} />
                 <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicyPage /></MainLayout>} />
+                <Route path="/:shortId" element={<ShortUrlRedirect />} />
                 <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
               </Routes>
             </BrowserRouter>
