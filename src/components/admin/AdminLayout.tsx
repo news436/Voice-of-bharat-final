@@ -108,7 +108,7 @@ export const AdminLayout = ({
   );
 
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
+    <div className="flex h-screen w-full bg-muted/40 overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col border-r bg-background transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="h-16 flex items-center border-b px-6">
@@ -117,8 +117,8 @@ export const AdminLayout = ({
         <SidebarContent />
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <div className="flex flex-1 flex-col min-h-0">
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
           <Sheet>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="md:hidden">
@@ -175,8 +175,10 @@ export const AdminLayout = ({
           </DropdownMenu>
 
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/40">
-          {children}
+        <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/40">
+          <div className="h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

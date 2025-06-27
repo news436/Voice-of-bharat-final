@@ -137,7 +137,7 @@ export const CategoryManager = () => {
       </CardContent>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent>
+        <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{editingCategory ? 'Edit Category' : 'Add New Category'}</SheetTitle>
             <SheetDescription>
@@ -168,7 +168,7 @@ export const CategoryManager = () => {
                  <Textarea id="description_hi" value={formData.description_hi} onChange={e => setFormData({ ...formData, description_hi: e.target.value })} />
                </div>
             </div>
-            <SheetFooter>
+            <SheetFooter className="mt-6">
               <SheetClose asChild>
                 <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
               </SheetClose>

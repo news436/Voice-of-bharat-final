@@ -129,7 +129,7 @@ export const StateManager = () => {
       </CardContent>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent>
+        <SheetContent className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{editingState ? 'Edit State' : 'Add New State'}</SheetTitle>
           </SheetHeader>
@@ -149,7 +149,7 @@ export const StateManager = () => {
                  <Input id="name_hi" value={formData.name_hi} onChange={e => setFormData({ ...formData, name_hi: e.target.value })} />
                </div>
             </div>
-            <SheetFooter>
+            <SheetFooter className="mt-6">
               <SheetClose asChild>
                 <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
               </SheetClose>

@@ -206,7 +206,7 @@ export const LiveStreamManager = () => {
       </CardContent>
 
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-[600px]">
+        <SheetContent className="sm:max-w-[600px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{editingStream ? 'Edit Stream' : 'Add New Stream'}</SheetTitle>
           </SheetHeader>
@@ -231,7 +231,7 @@ export const LiveStreamManager = () => {
                 <input type="checkbox" id="is_active" checked={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.checked})} />
                 <label htmlFor="is_active">Is Active</label>
              </div>
-            <SheetFooter>
+            <SheetFooter className="mt-6">
               <SheetClose asChild><Button type="button" variant="outline" onClick={resetForm}>Cancel</Button></SheetClose>
               <Button type="submit">Save</Button>
             </SheetFooter>
