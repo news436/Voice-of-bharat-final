@@ -21,6 +21,7 @@ import {
   Globe,
   AlertTriangle,
   Star,
+  Link,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,7 +35,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from '@/contexts/ThemeContext';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured' | 'urlshortener';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -91,6 +92,7 @@ export const AdminLayout = ({
     { id: 'states' as AdminSection, label: 'States', icon: Package },
     { id: 'videos' as AdminSection, label: 'Videos', icon: Video },
     { id: 'live' as AdminSection, label: 'Live Streams', icon: Radio },
+    { id: 'urlshortener' as AdminSection, label: 'URL Shortener', icon: Link },
     { id: 'admanager' as AdminSection, label: 'Ad Manager', icon: BarChart3 },
     { id: 'about' as AdminSection, label: 'About Us', icon: Info },
     { id: 'support' as AdminSection, label: 'Support Details', icon: Heart },

@@ -10,12 +10,12 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
 const ArticlePage = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug, id } = useParams<{ slug?: string; id?: string }>();
   const [article, setArticle] = useState<any>(null);
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,8 +27,8 @@ const ArticlePage = () => {
 
   // Share functions
   const copyToClipboard = async () => {
-    const shortUrl = getShortUrl(article.slug);
     try {
+      const shortUrl = await getShortUrl(article.id);
       await navigator.clipboard.writeText(shortUrl);
       setCopied(true);
       toast({
@@ -46,61 +46,93 @@ const ArticlePage = () => {
     }
   };
 
-  const shareOnWhatsApp = () => {
-    const shortUrl = getShortUrl(article.slug);
-    const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `${title} via @voiceofbharat ${shortUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(whatsappUrl, '_blank');
-    setShowShareDropdown(false);
+  const shareOnWhatsApp = async () => {
+    try {
+      const shortUrl = await getShortUrl(article.id);
+      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
+      const imageUrl = article.featured_image_url;
+      
+      await shareToWhatsApp(title, shortUrl, imageUrl);
+      setShowShareDropdown(false);
+    } catch (err) {
+      toast({
+        title: "Failed to share",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const shareOnFacebook = () => {
-    const shortUrl = getShortUrl(article.slug);
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}`;
-    window.open(facebookUrl, '_blank', 'width=600,height=400');
-    setShowShareDropdown(false);
+  const shareOnFacebook = async () => {
+    try {
+      const shortUrl = await getShortUrl(article.id);
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}`;
+      window.open(facebookUrl, '_blank', 'width=600,height=400');
+      setShowShareDropdown(false);
+    } catch (err) {
+      toast({
+        title: "Failed to share",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const shareOnTwitter = () => {
-    const shortUrl = getShortUrl(article.slug);
-    const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `${title} via @voiceofbharat ${shortUrl}`;
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-    window.open(twitterUrl, '_blank', 'width=600,height=400');
-    setShowShareDropdown(false);
+  const shareOnTwitter = async () => {
+    try {
+      const shortUrl = await getShortUrl(article.id);
+      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
+      const text = generateSocialShareText(title, shortUrl, 'twitter');
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(twitterUrl, '_blank', 'width=600,height=400');
+      setShowShareDropdown(false);
+    } catch (err) {
+      toast({
+        title: "Failed to share",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const shareOnInstagram = () => {
-    const shortUrl = getShortUrl(article.slug);
-    const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-    const text = `${title}\n\nvia @voiceofbharat\n${shortUrl}`;
-    
-    // Instagram doesn't support direct URL sharing, so we copy to clipboard
-    navigator.clipboard.writeText(text).then(() => {
+  const shareOnInstagram = async () => {
+    try {
+      const shortUrl = await getShortUrl(article.id);
+      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
+      const text = generateSocialShareText(title, shortUrl, 'instagram');
+      
+      // Instagram doesn't support direct URL sharing, so we copy to clipboard
+      await navigator.clipboard.writeText(text);
       toast({
         title: "Ready for Instagram!",
         description: "Article details copied to clipboard. You can now paste this in your Instagram story or post.",
       });
-    }).catch(() => {
+      setShowShareDropdown(false);
+    } catch (err) {
       toast({
         title: "Copy failed",
         description: "Please copy the article details manually for Instagram sharing.",
         variant: "destructive",
       });
-    });
-    setShowShareDropdown(false);
+    }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (navigator.share) {
       // Use native share if available
-      const shortUrl = getShortUrl(article.slug);
-      navigator.share({
-        title: language === 'hi' && article?.title_hi ? article.title_hi : article?.title,
-        text: article?.summary || 'Check out this article on Voice of Bharat',
-        url: shortUrl,
-      });
+      try {
+        const shortUrl = await getShortUrl(article.id);
+        const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
+        const text = generateSocialShareText(title, shortUrl);
+        await navigator.share({
+          title: title,
+          text: text,
+          url: shortUrl,
+        });
+      } catch (err) {
+        // Fallback to dropdown if native share fails
+        setShowShareDropdown(!showShareDropdown);
+      }
     } else {
       // Fallback to dropdown
       setShowShareDropdown(!showShareDropdown);
@@ -136,8 +168,21 @@ const ArticlePage = () => {
     const fetchArticle = async () => {
       setLoading(true);
       try {
-        // Use API client to fetch article
-        const response = await apiClient.getArticle(slug);
+        let response;
+        
+        // Use appropriate API call based on parameter
+        if (id) {
+          // Fetch by ID
+          response = await apiClient.getArticleById(id);
+        } else if (slug) {
+          // Fetch by slug
+          response = await apiClient.getArticle(slug);
+        } else {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
         if (!response.success || !response.data) {
           setNotFound(true);
           setLoading(false);
@@ -148,8 +193,27 @@ const ArticlePage = () => {
         // Update meta tags for social media sharing
         const title = language === 'hi' && response.data.title_hi ? response.data.title_hi : response.data.title;
         const description = language === 'hi' && response.data.summary_hi ? response.data.summary_hi : response.data.summary;
-        const image = response.data.featured_image_url || '/logo.png';
-        const shortUrl = getShortUrl(response.data.slug);
+        const image = response.data.featured_image_url ? 
+          (response.data.featured_image_url.startsWith('http') ? 
+            response.data.featured_image_url : 
+            `${window.location.origin}${response.data.featured_image_url}`) : 
+          `${window.location.origin}/logo.png`;
+        const shortUrl = await getShortUrl(response.data.id);
+        
+        // Prepare tags for meta tags
+        const tags = [];
+        if (response.data.categories?.name) {
+          tags.push(response.data.categories.name);
+        }
+        if (response.data.states?.name) {
+          tags.push(response.data.states.name);
+        }
+        if (response.data.is_breaking) {
+          tags.push('Breaking News');
+        }
+        if (response.data.is_featured) {
+          tags.push('Featured');
+        }
         
         updateMetaTags({
           title: `${title} - Voice of Bharat`,
@@ -158,12 +222,16 @@ const ArticlePage = () => {
           url: shortUrl,
           type: 'article',
           siteName: 'Voice of Bharat',
-          twitterHandle: '@voiceofbharat'
+          twitterHandle: '@voiceofbharat',
+          author: response.data.profiles?.full_name || response.data.publisher_name || 'Voice of Bharat',
+          publishedTime: response.data.published_at,
+          section: response.data.categories?.name || 'News',
+          tags: tags
         });
         
         // Fetch related articles using API client
         try {
-          const relatedResponse = await apiClient.get(`/articles/${slug}/related?limit=5`);
+          const relatedResponse = await apiClient.get(`/articles/${response.data.slug}/related?limit=5`);
           if (relatedResponse.success && relatedResponse.data && relatedResponse.data.length > 0) {
             setRelatedArticles(relatedResponse.data);
           } else {
@@ -193,7 +261,18 @@ const ArticlePage = () => {
     return () => {
       resetMetaTags();
     };
-  }, [slug, language]);
+  }, [slug, id, language]);
+
+  // Update meta tags when article loads
+  useEffect(() => {
+    if (article) {
+      updateMetaTags(article);
+    }
+    
+    return () => {
+      resetMetaTags();
+    };
+  }, [article]);
 
   if (loading) {
     return (

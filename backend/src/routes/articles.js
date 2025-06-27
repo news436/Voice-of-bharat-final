@@ -136,6 +136,46 @@ router.get('/featured', async (req, res) => {
   }
 });
 
+// Get article by ID
+router.get('/id/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { data, error } = await supabase
+      .from('articles')
+      .select(`
+        *,
+        categories(name, slug),
+        states(name),
+        profiles(full_name, avatar_url)
+      `)
+      .eq('id', id)
+      .eq('status', 'published')
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({
+          success: false,
+          error: 'Article not found'
+        });
+      }
+      throw error;
+    }
+    
+    res.json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('Error fetching article by ID:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch article'
+    });
+  }
+});
+
 // Get article by slug
 router.get('/:slug', async (req, res) => {
   try {

@@ -21,6 +21,7 @@ import analyticsRoutes from './routes/analytics.js';
 import adsRoutes from './routes/ads.js';
 import profilesRoutes from './routes/profiles.js';
 import teamMembersRoutes from './routes/team-members.js';
+import urlShortenerRoutes from './routes/urlShortener.js';
 
 // Import database config
 import { testConnection } from './config/database.js';
@@ -94,6 +95,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ads', adsRoutes);
 app.use('/api/profiles', profilesRoutes);
 app.use('/api/team-members', teamMembersRoutes);
+app.use('/api/redirect', urlShortenerRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

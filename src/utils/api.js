@@ -75,6 +75,10 @@ class ApiClient {
     return this.get(`/articles/${id}`);
   }
 
+  async getArticleById(id) {
+    return this.get(`/articles/id/${id}`);
+  }
+
   async createArticle(articleData) {
     return this.post('/articles', articleData);
   }
