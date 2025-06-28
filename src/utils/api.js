@@ -27,6 +27,17 @@ class ApiClient {
     try {
       const response = await fetch(url, config);
       
+      if (response.status === 429) {
+        // Rate limited - wait and retry once
+        console.log('⚠️ Rate limited, retrying in 2 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const retryResponse = await fetch(url, config);
+        if (!retryResponse.ok) {
+          throw new Error(`HTTP error! status: ${retryResponse.status}`);
+        }
+        return await retryResponse.json();
+      }
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

@@ -460,4 +460,35 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Increment article view count
+router.post('/:id/view', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from('articles')
+      .update({ views: supabase.raw('views + 1') })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get total and per-article views
+router.get('/views/all', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('id, title, views');
+    if (error) throw error;
+    const totalViews = data.reduce((sum, a) => sum + (a.views || 0), 0);
+    res.json({ success: true, totalViews, articles: data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router; 

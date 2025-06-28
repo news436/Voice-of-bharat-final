@@ -49,7 +49,7 @@ export const BreakingNewsManager = () => {
 
   const fetchAllArticles = async () => {
     try {
-      const response = await apiClient.getArticles({ limit: 1000 });
+      const response = await apiClient.getArticles({ limit: 100 });
       if (response.success) {
         setAllArticles(response.data || []);
       }

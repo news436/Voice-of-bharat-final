@@ -294,6 +294,12 @@ const ArticlePage = () => {
     };
   }, [article]);
 
+  useEffect(() => {
+    if (article?.id) {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/articles/${article.id}/view`, { method: 'POST' });
+    }
+  }, [article?.id]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">

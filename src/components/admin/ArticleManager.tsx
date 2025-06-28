@@ -87,7 +87,7 @@ export const ArticleManager = () => {
     setIsLoading(true);
     try {
       // Fetch articles using API client
-      const articlesResponse = await apiClient.getArticles({ limit: 1000 });
+      const articlesResponse = await apiClient.getArticles({ limit: 100 });
       if (articlesResponse.success) {
         setArticles(articlesResponse.data);
       }

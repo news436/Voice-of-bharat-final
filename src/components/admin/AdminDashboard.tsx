@@ -47,12 +47,13 @@ export const AdminDashboard = ({
   });
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewsStats, setViewsStats] = useState<{ totalViews: number, articles: any[] }>({ totalViews: 0, articles: [] });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         // Fetch articles for stats
-        const articlesResponse = await apiClient.getArticles({ limit: 1000 });
+        const articlesResponse = await apiClient.getArticles({ limit: 100 });
         const articles = articlesResponse.success ? articlesResponse.data : [];
         
         // Fetch videos for stats
@@ -62,6 +63,12 @@ export const AdminDashboard = ({
         // Fetch live streams for stats
         const streamsResponse = await apiClient.getLiveStreams();
         const streams = streamsResponse.success ? streamsResponse.data : [];
+        
+        // Fetch views stats
+        const viewsResponse = await apiClient.get('/articles/views/all');
+        if (viewsResponse.success) {
+          setViewsStats({ totalViews: viewsResponse.totalViews, articles: viewsResponse.articles });
+        }
         
         const totalArticles = articles.length;
         const publishedArticles = articles.filter((a: any) => a.status === 'published').length;
@@ -268,6 +275,28 @@ export const AdminDashboard = ({
             </Button>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-lg font-bold mb-2">Total Article Views: {viewsStats.totalViews}</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border">
+            <thead>
+              <tr>
+                <th className="border px-2 py-1">Article</th>
+                <th className="border px-2 py-1">Views</th>
+              </tr>
+            </thead>
+            <tbody>
+              {viewsStats.articles.map((a) => (
+                <tr key={a.id}>
+                  <td className="border px-2 py-1">{a.title}</td>
+                  <td className="border px-2 py-1 text-center">{a.views || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
       </div>

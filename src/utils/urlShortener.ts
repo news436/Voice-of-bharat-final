@@ -105,63 +105,39 @@ export function generateSocialShareText(articleTitle: string, shortUrl: string, 
   return text;
 }
 
-// Generate WhatsApp sharing URL with image support
-export function generateWhatsAppShareUrl(articleTitle: string, shortUrl: string, imageUrl?: string): string {
+// Generate WhatsApp sharing URL (no image URL in message)
+export function generateWhatsAppShareUrl(articleTitle: string, shortUrl: string): string {
   const text = generateSocialShareText(articleTitle, shortUrl, 'whatsapp');
-  
-  // WhatsApp Web API with image support
-  if (imageUrl) {
-    // For WhatsApp Web, we can include image in the message
-    const messageWithImage = `${text}\n\n📸 ${imageUrl}`;
-    return `https://wa.me/?text=${encodeURIComponent(messageWithImage)}`;
-  }
-  
-  // Standard WhatsApp sharing
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
-// Generate WhatsApp sharing URL for mobile (with image)
-export function generateWhatsAppMobileShareUrl(articleTitle: string, shortUrl: string, imageUrl?: string): string {
+// Generate WhatsApp sharing URL for mobile (no image URL in message)
+export function generateWhatsAppMobileShareUrl(articleTitle: string, shortUrl: string): string {
   const text = generateSocialShareText(articleTitle, shortUrl, 'whatsapp');
-  
-  // For mobile WhatsApp, we can use the intent URL with image
-  if (imageUrl) {
-    return `whatsapp://send?text=${encodeURIComponent(text)}&image=${encodeURIComponent(imageUrl)}`;
-  }
-  
   return `whatsapp://send?text=${encodeURIComponent(text)}`;
 }
 
 // Advanced WhatsApp sharing with fallbacks
-export async function shareToWhatsApp(articleTitle: string, shortUrl: string, imageUrl?: string): Promise<void> {
+export async function shareToWhatsApp(articleTitle: string, shortUrl: string): Promise<void> {
   const text = generateSocialShareText(articleTitle, shortUrl, 'whatsapp');
-  
-  // Try Web Share API first (best for mobile)
   if (navigator.share) {
     try {
-      // For Web Share API, only include text (which already contains the URL)
-      // Don't include url parameter to avoid duplication
       await navigator.share({
         title: articleTitle,
         text: text,
-        // url: shortUrl, // Removed to avoid duplicate URLs
       });
       return;
     } catch (error) {
       console.log('Web Share API failed, falling back to WhatsApp URL');
     }
   }
-  
-  // Fallback to WhatsApp URL
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
   let whatsappUrl;
   if (isMobile) {
-    whatsappUrl = generateWhatsAppMobileShareUrl(articleTitle, shortUrl, imageUrl);
+    whatsappUrl = generateWhatsAppMobileShareUrl(articleTitle, shortUrl);
   } else {
-    whatsappUrl = generateWhatsAppShareUrl(articleTitle, shortUrl, imageUrl);
+    whatsappUrl = generateWhatsAppShareUrl(articleTitle, shortUrl);
   }
-  
   window.open(whatsappUrl, '_blank');
 }
 
@@ -204,6 +180,6 @@ export function testWhatsAppPreview(articleTitle: string, shortUrl: string, imag
   }
   
   // Test WhatsApp sharing URL
-  const whatsappUrl = generateWhatsAppShareUrl(articleTitle, shortUrl, imageUrl);
+  const whatsappUrl = generateWhatsAppShareUrl(articleTitle, shortUrl);
   console.log('📲 WhatsApp Share URL:', whatsappUrl);
 } 

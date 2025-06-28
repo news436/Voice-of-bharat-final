@@ -179,7 +179,7 @@ export const AdminLayout = ({
         </header>
         <main className="flex-1 overflow-auto p-4 lg:p-6 bg-muted/40">
           <div className="h-full">
-            {children}
+          {children}
           </div>
         </main>
       </div>
