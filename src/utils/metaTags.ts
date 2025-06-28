@@ -17,7 +17,13 @@ interface MetaTagsData {
 export function updateMetaTags(article: any, baseUrl: string = 'https://voiceofbharat.live') {
   const title = article?.title_hi || article?.title || 'Voice of Bharat - Latest News';
   const description = article?.excerpt_hi || article?.excerpt || 'Latest news and updates from Voice of Bharat';
-  const imageUrl = article?.featured_image_url ? `${baseUrl}${article.featured_image_url}` : `${baseUrl}/logo.png`;
+  
+  // Ensure og:image is a full Cloudinary URL
+  let imageUrl = article?.featured_image_url;
+  if (imageUrl && !imageUrl.startsWith('http')) {
+    imageUrl = `https://res.cloudinary.com/your-cloud-name/image/upload/${imageUrl.replace(/^\/+/, '')}`;
+  }
+  if (!imageUrl) imageUrl = `${baseUrl}/logo.png`;
   
   // Generate correct article URL based on whether it's a slug or ID
   const articleUrl = article?.slug 
