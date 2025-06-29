@@ -537,6 +537,11 @@ router.get('/preview/:id', async (req, res) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${title} - Voice of Bharat</title>
           
+          <!-- Cache control for Facebook -->
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+          <meta http-equiv="Pragma" content="no-cache">
+          <meta http-equiv="Expires" content="0">
+          
           <!-- Open Graph / Facebook -->
           <meta property="og:type" content="article">
           <meta property="og:url" content="${articleUrl}">
@@ -545,6 +550,7 @@ router.get('/preview/:id', async (req, res) => {
           <meta property="og:image" content="${imageUrl}">
           <meta property="og:image:width" content="1200">
           <meta property="og:image:height" content="630">
+          <meta property="og:image:type" content="image/jpeg">
           <meta property="og:site_name" content="Voice of Bharat">
           <meta property="og:locale" content="en_US">
           
@@ -578,8 +584,11 @@ router.get('/preview/:id', async (req, res) => {
         </html>
       `;
       
-      // Set content type and send response
+      // Set content type and cache control headers
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.send(html);
     } else {
       // For regular users, redirect immediately
@@ -652,6 +661,11 @@ router.get('/p/:shortId', async (req, res) => {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>${title} - Voice of Bharat</title>
           
+          <!-- Cache control for Facebook -->
+          <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+          <meta http-equiv="Pragma" content="no-cache">
+          <meta http-equiv="Expires" content="0">
+          
           <!-- Open Graph / Facebook -->
           <meta property="og:type" content="article">
           <meta property="og:url" content="${articleUrl}">
@@ -660,6 +674,7 @@ router.get('/p/:shortId', async (req, res) => {
           <meta property="og:image" content="${imageUrl}">
           <meta property="og:image:width" content="1200">
           <meta property="og:image:height" content="630">
+          <meta property="og:image:type" content="image/jpeg">
           <meta property="og:site_name" content="Voice of Bharat">
           <meta property="og:locale" content="en_US">
           
@@ -693,8 +708,11 @@ router.get('/p/:shortId', async (req, res) => {
         </html>
       `;
       
-      // Set content type and send response
+      // Set content type and cache control headers
       res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.send(html);
     } else {
       // For regular users, redirect immediately

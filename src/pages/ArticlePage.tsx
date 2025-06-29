@@ -67,7 +67,9 @@ const ArticlePage = () => {
   const shareOnFacebook = async () => {
     try {
       const previewUrl = generatePreviewUrl(article.id);
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
+      // Add cache-busting parameter to force Facebook to fetch fresh meta tags
+      const cacheBuster = Date.now();
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}&t=${cacheBuster}`;
       window.open(facebookUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
