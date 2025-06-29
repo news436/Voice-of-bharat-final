@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
@@ -52,12 +52,10 @@ const ArticlePage = () => {
 
   const shareOnWhatsApp = async () => {
     try {
-      const shortUrl = await getShortUrl(article.id);
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const imageUrl = article.featured_image_url;
       
-      // Use the improved WhatsApp sharing function
-      await shareToWhatsApp(title, shortUrl, imageUrl);
+      // Use the new preview URL function for better social media previews
+      await shareToWhatsAppWithPreview(title, article.id);
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -70,8 +68,8 @@ const ArticlePage = () => {
 
   const shareOnFacebook = async () => {
     try {
-      const shortUrl = await getShortUrl(article.id);
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}`;
+      const previewUrl = generatePreviewUrl(article.id);
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
       window.open(facebookUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
@@ -85,9 +83,8 @@ const ArticlePage = () => {
 
   const shareOnTwitter = async () => {
     try {
-      const shortUrl = await getShortUrl(article.id);
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareText(title, shortUrl, 'twitter');
+      const text = generateSocialShareTextWithPreview(title, article.id, 'twitter');
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
       window.open(twitterUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
@@ -102,9 +99,8 @@ const ArticlePage = () => {
 
   const shareOnInstagram = async () => {
     try {
-      const shortUrl = await getShortUrl(article.id);
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareText(title, shortUrl, 'instagram');
+      const text = generateSocialShareTextWithPreview(title, article.id, 'instagram');
       
       // Instagram doesn't support direct URL sharing, so we copy to clipboard
       // Use the mobile-friendly clipboard utility
@@ -128,16 +124,15 @@ const ArticlePage = () => {
     if (navigator.share) {
       // Use native share if available
       try {
-        const shortUrl = await getShortUrl(article.id);
         const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-        const text = generateSocialShareText(title, shortUrl);
+        const text = generateSocialShareTextWithPreview(title, article.id);
         
         // For Web Share API, only include text (which already contains the URL)
         // Don't include url parameter to avoid duplication
         await navigator.share({
           title: title,
           text: text,
-          // url: shortUrl, // Removed to avoid duplicate URLs
+          // url: previewUrl, // Removed to avoid duplicate URLs
         });
       } catch (err) {
         // Fallback to dropdown if native share fails

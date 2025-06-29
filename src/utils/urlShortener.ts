@@ -182,4 +182,66 @@ export function testWhatsAppPreview(articleTitle: string, shortUrl: string, imag
   // Test WhatsApp sharing URL
   const whatsappUrl = generateWhatsAppShareUrl(articleTitle, shortUrl);
   console.log('📲 WhatsApp Share URL:', whatsappUrl);
+}
+
+// Generate preview URL for social media sharing
+export function generatePreviewUrl(articleId: string): string {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
+  return `${API_BASE_URL}/articles/preview/${articleId}`;
+}
+
+// Generate social sharing text with preview URL
+export function generateSocialShareTextWithPreview(articleTitle: string, articleId: string, platform: 'whatsapp' | 'twitter' | 'instagram' | 'facebook' = 'twitter'): string {
+  const previewUrl = generatePreviewUrl(articleId);
+  const maxLength = platform === 'twitter' ? 280 : 1000;
+  
+  // Format: "Article Title\n\nvia @voiceofbharat\nPreviewURL"
+  let text = `${articleTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  
+  // Truncate if too long for Twitter
+  if (platform === 'twitter' && text.length > maxLength) {
+    const titleMaxLength = maxLength - previewUrl.length - 20;
+    const truncatedTitle = articleTitle.length > titleMaxLength 
+      ? articleTitle.substring(0, titleMaxLength - 3) + '...'
+      : articleTitle;
+    text = `${truncatedTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  }
+  
+  return text;
+}
+
+// Generate WhatsApp sharing URL with preview
+export function generateWhatsAppShareUrlWithPreview(articleTitle: string, articleId: string): string {
+  const text = generateSocialShareTextWithPreview(articleTitle, articleId, 'whatsapp');
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+// Generate WhatsApp mobile sharing URL with preview
+export function generateWhatsAppMobileShareUrlWithPreview(articleTitle: string, articleId: string): string {
+  const text = generateSocialShareTextWithPreview(articleTitle, articleId, 'whatsapp');
+  return `whatsapp://send?text=${encodeURIComponent(text)}`;
+}
+
+// Advanced WhatsApp sharing with preview URLs
+export async function shareToWhatsAppWithPreview(articleTitle: string, articleId: string): Promise<void> {
+  const text = generateSocialShareTextWithPreview(articleTitle, articleId, 'whatsapp');
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: articleTitle,
+        text: text,
+      });
+      return;
+    } catch (error) {
+      console.log('Web Share API failed, falling back to WhatsApp URL');
+    }
+  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  let whatsappUrl;
+  if (isMobile) {
+    whatsappUrl = generateWhatsAppMobileShareUrlWithPreview(articleTitle, articleId);
+  } else {
+    whatsappUrl = generateWhatsAppShareUrlWithPreview(articleTitle, articleId);
+  }
+  window.open(whatsappUrl, '_blank');
 } 
