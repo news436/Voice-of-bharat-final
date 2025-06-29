@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
@@ -28,11 +28,8 @@ const ArticlePage = () => {
   // Share functions
   const copyArticleLink = async () => {
     try {
-      const previewUrl = generateShortPreviewUrl(article.id);
-      
-      // Use the mobile-friendly clipboard utility
+      const previewUrl = generatePreviewUrl(article.id);
       await copyToClipboard(previewUrl);
-      
       setCopied(true);
       toast({
         title: "Link copied!",
@@ -53,6 +50,7 @@ const ArticlePage = () => {
   const shareOnWhatsApp = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
+      console.log('📱 WhatsApp share - Article ID:', article.id);
       
       // Use the new short preview URL function for cleaner sharing
       await shareToWhatsAppWithShortPreview(title, article.id);
@@ -68,7 +66,7 @@ const ArticlePage = () => {
 
   const shareOnFacebook = async () => {
     try {
-      const previewUrl = generateShortPreviewUrl(article.id);
+      const previewUrl = generatePreviewUrl(article.id);
       const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
       window.open(facebookUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
@@ -204,6 +202,9 @@ const ArticlePage = () => {
         
         console.log('✅ Article found:', response.data.title);
         setArticle(response.data);
+        
+        // Test short URL generation
+        testShortUrlGeneration(response.data.id);
         
         // Update meta tags for social media sharing
         const title = language === 'hi' && response.data.title_hi ? response.data.title_hi : response.data.title;

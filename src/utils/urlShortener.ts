@@ -251,12 +251,15 @@ export function generateShortPreviewUrl(articleId: string): string {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
   
   // Create a shorter ID using base64 encoding (browser-compatible)
-  const shortId = btoa(articleId)
+  // Handle Unicode characters properly
+  const shortId = btoa(unescape(encodeURIComponent(articleId)))
     .replace(/\+/g, '-')  // Replace + with -
     .replace(/\//g, '_')  // Replace / with _
     .replace(/=/g, '');   // Remove padding
   
-  return `${API_BASE_URL}/articles/p/${shortId}`;
+  const url = `${API_BASE_URL}/articles/p/${shortId}`;
+  console.log('🔗 Generated short preview URL:', url);
+  return url;
 }
 
 // Generate even shorter preview URL (if you want to use just the first part of the ID)
@@ -323,4 +326,19 @@ export async function shareToWhatsAppWithShortPreview(articleTitle: string, arti
     whatsappUrl = generateWhatsAppShareUrlWithShortPreview(articleTitle, articleId);
   }
   window.open(whatsappUrl, '_blank');
+}
+
+// Test function to verify short URL generation
+export function testShortUrlGeneration(articleId: string): void {
+  console.log('🧪 Testing short URL generation:');
+  console.log('Original Article ID:', articleId);
+  
+  const shortUrl = generateShortPreviewUrl(articleId);
+  console.log('Generated Short URL:', shortUrl);
+  
+  // Test if it's different from the old format
+  const oldUrl = generatePreviewUrl(articleId);
+  console.log('Old URL format:', oldUrl);
+  
+  console.log('✅ Short URL is', shortUrl.length, 'characters vs', oldUrl.length, 'characters');
 } 
