@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import apiClient from '@/utils/api';
 
@@ -28,15 +28,15 @@ const ArticlePage = () => {
   // Share functions
   const copyArticleLink = async () => {
     try {
-      const shortUrl = await getShortUrl(article.id);
+      const previewUrl = generateShortPreviewUrl(article.id);
       
       // Use the mobile-friendly clipboard utility
-      await copyToClipboard(shortUrl);
+      await copyToClipboard(previewUrl);
       
       setCopied(true);
       toast({
         title: "Link copied!",
-        description: "Article link has been copied to clipboard.",
+        description: "Article preview link has been copied to clipboard.",
       });
       setTimeout(() => setCopied(false), 2000);
       setShowShareDropdown(false);
@@ -54,8 +54,8 @@ const ArticlePage = () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
       
-      // Use the new preview URL function for better social media previews
-      await shareToWhatsAppWithPreview(title, article.id);
+      // Use the new short preview URL function for cleaner sharing
+      await shareToWhatsAppWithShortPreview(title, article.id);
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -68,7 +68,7 @@ const ArticlePage = () => {
 
   const shareOnFacebook = async () => {
     try {
-      const previewUrl = generatePreviewUrl(article.id);
+      const previewUrl = generateShortPreviewUrl(article.id);
       const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
       window.open(facebookUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
@@ -84,7 +84,7 @@ const ArticlePage = () => {
   const shareOnTwitter = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithPreview(title, article.id, 'twitter');
+      const text = generateSocialShareTextWithShortPreview(title, article.id, 'twitter');
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
       window.open(twitterUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
@@ -100,7 +100,7 @@ const ArticlePage = () => {
   const shareOnInstagram = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithPreview(title, article.id, 'instagram');
+      const text = generateSocialShareTextWithShortPreview(title, article.id, 'instagram');
       
       // Instagram doesn't support direct URL sharing, so we copy to clipboard
       // Use the mobile-friendly clipboard utility
@@ -125,7 +125,7 @@ const ArticlePage = () => {
       // Use native share if available
       try {
         const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-        const text = generateSocialShareTextWithPreview(title, article.id);
+        const text = generateSocialShareTextWithShortPreview(title, article.id);
         
         // For Web Share API, only include text (which already contains the URL)
         // Don't include url parameter to avoid duplication

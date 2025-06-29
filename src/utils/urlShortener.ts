@@ -244,4 +244,83 @@ export async function shareToWhatsAppWithPreview(articleTitle: string, articleId
     whatsappUrl = generateWhatsAppShareUrlWithPreview(articleTitle, articleId);
   }
   window.open(whatsappUrl, '_blank');
+}
+
+// Generate short preview URL for social media sharing
+export function generateShortPreviewUrl(articleId: string): string {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
+  
+  // Create a shorter ID using base64 encoding (browser-compatible)
+  const shortId = btoa(articleId)
+    .replace(/\+/g, '-')  // Replace + with -
+    .replace(/\//g, '_')  // Replace / with _
+    .replace(/=/g, '');   // Remove padding
+  
+  return `${API_BASE_URL}/articles/p/${shortId}`;
+}
+
+// Generate even shorter preview URL (if you want to use just the first part of the ID)
+export function generateMinimalPreviewUrl(articleId: string): string {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
+  
+  // Use just the first 8 characters of the article ID
+  const shortId = articleId.substring(0, 8);
+  
+  return `${API_BASE_URL}/articles/p/${shortId}`;
+}
+
+// Generate social sharing text with short preview URL
+export function generateSocialShareTextWithShortPreview(articleTitle: string, articleId: string, platform: 'whatsapp' | 'twitter' | 'instagram' | 'facebook' = 'twitter'): string {
+  const previewUrl = generateShortPreviewUrl(articleId);
+  const maxLength = platform === 'twitter' ? 280 : 1000;
+  
+  // Format: "Article Title\n\nvia @voiceofbharat\nShortPreviewURL"
+  let text = `${articleTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  
+  // Truncate if too long for Twitter
+  if (platform === 'twitter' && text.length > maxLength) {
+    const titleMaxLength = maxLength - previewUrl.length - 20;
+    const truncatedTitle = articleTitle.length > titleMaxLength 
+      ? articleTitle.substring(0, titleMaxLength - 3) + '...'
+      : articleTitle;
+    text = `${truncatedTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  }
+  
+  return text;
+}
+
+// Generate WhatsApp sharing URL with short preview
+export function generateWhatsAppShareUrlWithShortPreview(articleTitle: string, articleId: string): string {
+  const text = generateSocialShareTextWithShortPreview(articleTitle, articleId, 'whatsapp');
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+// Generate WhatsApp mobile sharing URL with short preview
+export function generateWhatsAppMobileShareUrlWithShortPreview(articleTitle: string, articleId: string): string {
+  const text = generateSocialShareTextWithShortPreview(articleTitle, articleId, 'whatsapp');
+  return `whatsapp://send?text=${encodeURIComponent(text)}`;
+}
+
+// Advanced WhatsApp sharing with short preview URLs
+export async function shareToWhatsAppWithShortPreview(articleTitle: string, articleId: string): Promise<void> {
+  const text = generateSocialShareTextWithShortPreview(articleTitle, articleId, 'whatsapp');
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: articleTitle,
+        text: text,
+      });
+      return;
+    } catch (error) {
+      console.log('Web Share API failed, falling back to WhatsApp URL');
+    }
+  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  let whatsappUrl;
+  if (isMobile) {
+    whatsappUrl = generateWhatsAppMobileShareUrlWithShortPreview(articleTitle, articleId);
+  } else {
+    whatsappUrl = generateWhatsAppShareUrlWithShortPreview(articleTitle, articleId);
+  }
+  window.open(whatsappUrl, '_blank');
 } 
