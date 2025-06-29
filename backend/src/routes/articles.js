@@ -510,121 +510,87 @@ router.get('/preview/:id', async (req, res) => {
       .single();
     
     if (error || !article) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Article Not Found - Voice of Bharat</title>
-          <meta property="og:title" content="Article Not Found - Voice of Bharat">
-          <meta property="og:description" content="The requested article could not be found.">
-          <meta property="og:image" content="https://voiceofbharat.live/logo.png">
-          <meta property="og:url" content="https://voiceofbharat.live">
-          <meta property="og:type" content="website">
-          <meta name="twitter:card" content="summary_large_image">
-          <meta name="twitter:title" content="Article Not Found - Voice of Bharat">
-          <meta name="twitter:description" content="The requested article could not be found.">
-          <meta name="twitter:image" content="https://voiceofbharat.live/logo.png">
-        </head>
-        <body>
-          <script>window.location.href = "https://voiceofbharat.live";</script>
-          <p>Redirecting to Voice of Bharat...</p>
-        </body>
-        </html>
-      `);
+      // Redirect to homepage if article not found
+      return res.redirect(302, 'https://voiceofbharat.live');
     }
     
-    // Prepare meta tag content
-    const title = article.title_hi || article.title;
-    const description = article.summary_hi || article.summary || 'Latest news and updates from Voice of Bharat';
-    const imageUrl = article.featured_image_url || 'https://voiceofbharat.live/logo.png';
-    const articleUrl = `https://voiceofbharat.live/article/${article.slug}`;
-    const author = article.profiles?.full_name || 'Voice of Bharat';
-    const category = article.categories?.name || 'News';
-    const publishedDate = article.published_at ? new Date(article.published_at).toISOString() : '';
+    // Check if this is a social media bot (User-Agent check)
+    const userAgent = req.headers['user-agent'] || '';
+    const isBot = /bot|crawler|spider|crawling|facebookexternalhit|twitterbot|whatsapp|telegram/i.test(userAgent.toLowerCase());
     
-    // Generate HTML with Open Graph meta tags
-    const html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${title} - Voice of Bharat</title>
-        
-        <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="article">
-        <meta property="og:url" content="${articleUrl}">
-        <meta property="og:title" content="${title}">
-        <meta property="og:description" content="${description}">
-        <meta property="og:image" content="${imageUrl}">
-        <meta property="og:image:width" content="1200">
-        <meta property="og:image:height" content="630">
-        <meta property="og:site_name" content="Voice of Bharat">
-        <meta property="og:locale" content="en_US">
-        
-        <!-- Article specific meta tags -->
-        <meta property="article:published_time" content="${publishedDate}">
-        <meta property="article:author" content="${author}">
-        <meta property="article:section" content="${category}">
-        
-        <!-- Twitter -->
-        <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:url" content="${articleUrl}">
-        <meta name="twitter:title" content="${title}">
-        <meta name="twitter:description" content="${description}">
-        <meta name="twitter:image" content="${imageUrl}">
-        <meta name="twitter:site" content="@voiceofbharat">
-        
-        <!-- Additional meta tags -->
-        <meta name="description" content="${description}">
-        <meta name="keywords" content="${category}, news, voice of bharat">
-        <meta name="author" content="${author}">
-        
-        <!-- Favicon -->
-        <link rel="icon" type="image/x-icon" href="https://voiceofbharat.live/favicon.ico">
-        
-        <!-- Redirect to actual article page -->
-        <script>
-          // Redirect to the actual article page
-          window.location.href = "${articleUrl}";
-        </script>
-      </head>
-      <body>
-        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
-          <div style="text-align: center;">
-            <h1>${title}</h1>
-            <p>${description}</p>
-            <p>Redirecting to Voice of Bharat...</p>
-            <p><a href="${articleUrl}">Click here if you are not redirected automatically</a></p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    // Set content type and send response
-    res.setHeader('Content-Type', 'text/html');
-    res.send(html);
+    if (isBot) {
+      // For bots, return static HTML with meta tags
+      const title = article.title_hi || article.title;
+      const description = article.summary_hi || article.summary || 'Latest news and updates from Voice of Bharat';
+      const imageUrl = article.featured_image_url || 'https://voiceofbharat.live/logo.png';
+      const articleUrl = `https://voiceofbharat.live/article/${article.slug}`;
+      const author = article.profiles?.full_name || 'Voice of Bharat';
+      const category = article.categories?.name || 'News';
+      const publishedDate = article.published_at ? new Date(article.published_at).toISOString() : '';
+      
+      // Generate HTML with Open Graph meta tags
+      const html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${title} - Voice of Bharat</title>
+          
+          <!-- Open Graph / Facebook -->
+          <meta property="og:type" content="article">
+          <meta property="og:url" content="${articleUrl}">
+          <meta property="og:title" content="${title}">
+          <meta property="og:description" content="${description}">
+          <meta property="og:image" content="${imageUrl}">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+          <meta property="og:site_name" content="Voice of Bharat">
+          <meta property="og:locale" content="en_US">
+          
+          <!-- Article specific meta tags -->
+          <meta property="article:published_time" content="${publishedDate}">
+          <meta property="article:author" content="${author}">
+          <meta property="article:section" content="${category}">
+          
+          <!-- Twitter -->
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:url" content="${articleUrl}">
+          <meta name="twitter:title" content="${title}">
+          <meta name="twitter:description" content="${description}">
+          <meta name="twitter:image" content="${imageUrl}">
+          <meta name="twitter:site" content="@voiceofbharat">
+          
+          <!-- Additional meta tags -->
+          <meta name="description" content="${description}">
+          <meta name="keywords" content="${category}, news, voice of bharat">
+          <meta name="author" content="${author}">
+          
+          <!-- Favicon -->
+          <link rel="icon" type="image/x-icon" href="https://voiceofbharat.live/favicon.ico">
+          
+          <!-- Redirect to actual article page -->
+          <meta http-equiv="refresh" content="0;url=${articleUrl}">
+        </head>
+        <body>
+          <p>Redirecting to <a href="${articleUrl}">${title}</a>...</p>
+        </body>
+        </html>
+      `;
+      
+      // Set content type and send response
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } else {
+      // For regular users, redirect immediately
+      const articleUrl = `https://voiceofbharat.live/article/${article.slug}`;
+      res.redirect(302, articleUrl);
+    }
     
   } catch (error) {
     console.error('Error generating social media preview:', error);
-    res.status(500).send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Error - Voice of Bharat</title>
-        <meta property="og:title" content="Error - Voice of Bharat">
-        <meta property="og:description" content="An error occurred while loading the article.">
-        <meta property="og:image" content="https://voiceofbharat.live/logo.png">
-        <meta property="og:url" content="https://voiceofbharat.live">
-        <meta property="og:type" content="website">
-      </head>
-      <body>
-        <script>window.location.href = "https://voiceofbharat.live";</script>
-        <p>Redirecting to Voice of Bharat...</p>
-      </body>
-      </html>
-    `);
+    // Redirect to homepage on error
+    res.redirect(302, 'https://voiceofbharat.live');
   }
 });
 
