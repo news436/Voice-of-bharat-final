@@ -514,16 +514,7 @@ router.get('/preview/:id', async (req, res) => {
   const slug = article.slug || article.id;
   const articleUrl = `https://voiceofbharat.live/article/${slug}`;
 
-  // User-Agent check for bots
-  const userAgent = req.headers['user-agent'] || '';
-  const isBot = /bot|crawler|spider|crawling|facebookexternalhit|twitterbot|whatsapp|telegram/i.test(userAgent.toLowerCase());
-
-  if (!isBot) {
-    // For real users, redirect immediately
-    return res.redirect(302, articleUrl);
-  }
-
-  // For bots, serve meta tags and JS redirect fallback
+  // Always serve HTML with meta tags and multiple redirect methods
   res.setHeader('Content-Type', 'text/html');
   res.send(`
     <!DOCTYPE html>
@@ -532,7 +523,7 @@ router.get('/preview/:id', async (req, res) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title}</title>
-      <!-- Facebook Open Graph -->
+      <!-- Meta Tags for Preview -->
       <meta property="og:title" content="${title}" />
       <meta property="og:description" content="${description}" />
       <meta property="og:image" content="${imageUrl}" />
@@ -540,15 +531,19 @@ router.get('/preview/:id', async (req, res) => {
       <meta property="og:type" content="article" />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <!-- Twitter -->
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content="${title}" />
       <meta name="twitter:description" content="${description}" />
       <meta name="twitter:image" content="${imageUrl}" />
+
+      <!-- Fallback Redirect for weird browsers -->
+      <meta http-equiv="refresh" content="0; url=${articleUrl}" />
     </head>
     <body>
+      <p>Redirecting to the article...</p>
+      <!-- Primary Redirect -->
       <script>
-        window.location.href = "${articleUrl}";
+        window.location.replace("${articleUrl}");
       </script>
     </body>
     </html>
