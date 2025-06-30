@@ -34,14 +34,21 @@ export const BreakingNewsManager = () => {
   const fetchBreakingNews = async () => {
     setIsLoading(true);
     try {
+      console.log('🔍 Fetching breaking news...');
       const response = await apiClient.getBreakingNews();
+      console.log('✅ Breaking news response:', response);
       if (response.success) {
         setArticles(response.data || []);
       } else {
         throw new Error(response.error || 'Failed to fetch breaking news');
       }
     } catch (error) {
-      console.error('Error fetching breaking news:', error);
+      console.error('❌ Error fetching breaking news:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to fetch breaking news',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -143,15 +150,25 @@ export const BreakingNewsManager = () => {
 
   const handleRemoveBreaking = async (articleId: string) => {
     try {
-      const response = await apiClient.updateArticle(articleId, { is_breaking: false });
+      console.log('🎯 Attempting to remove breaking tag from article:', articleId);
+      const response = await apiClient.updateArticle(articleId, { 
+        is_breaking: false,
+        updated_at: new Date().toISOString()
+      });
+      console.log('✅ Remove breaking response:', response);
       if (response.success) {
         toast({ title: 'Success', description: 'Article removed from breaking news.' });
-        fetchBreakingNews();
+        await fetchBreakingNews();
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error('❌ Error removing breaking tag:', error);
+      toast({ 
+        title: 'Error', 
+        description: `Failed to remove breaking tag: ${error.message}`, 
+        variant: 'destructive' 
+      });
     }
   };
 

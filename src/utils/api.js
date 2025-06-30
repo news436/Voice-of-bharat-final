@@ -95,7 +95,15 @@ class ApiClient {
   }
 
   async updateArticle(id, articleData) {
-    return this.put(`/articles/${id}`, articleData);
+    try {
+      console.log('📝 Updating article:', id, 'with data:', articleData);
+      const response = await this.put(`/articles/${id}`, articleData);
+      console.log('✅ Article update response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error updating article:', error);
+      throw error;
+    }
   }
 
   async deleteArticle(id) {

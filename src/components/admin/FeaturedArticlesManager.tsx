@@ -21,14 +21,21 @@ export const FeaturedArticlesManager = () => {
   const fetchFeaturedArticles = async () => {
     setIsLoading(true);
     try {
+      console.log('🔍 Fetching featured articles...');
       const response = await apiClient.getFeaturedArticles();
+      console.log('✅ Featured articles response:', response);
       if (response.success) {
         setArticles(response.data || []);
       } else {
         throw new Error(response.error || 'Failed to fetch featured articles');
       }
     } catch (error) {
-      console.error('Error fetching featured articles:', error);
+      console.error('❌ Error fetching featured articles:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to fetch featured articles',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -47,15 +54,25 @@ export const FeaturedArticlesManager = () => {
 
   const handleRemoveFeatured = async (articleId: string) => {
     try {
-      const response = await apiClient.updateArticle(articleId, { is_featured: false });
+      console.log('🎯 Attempting to remove featured tag from article:', articleId);
+      const response = await apiClient.updateArticle(articleId, { 
+        is_featured: false,
+        updated_at: new Date().toISOString()
+      });
+      console.log('✅ Remove featured response:', response);
       if (response.success) {
         toast({ title: 'Success', description: 'Article removed from featured.' });
-        fetchFeaturedArticles();
+        await fetchFeaturedArticles();
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error('❌ Error removing featured tag:', error);
+      toast({ 
+        title: 'Error', 
+        description: `Failed to remove featured tag: ${error.message}`, 
+        variant: 'destructive' 
+      });
     }
   };
 

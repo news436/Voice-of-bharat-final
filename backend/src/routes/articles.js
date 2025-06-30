@@ -6,7 +6,7 @@ const router = express.Router();
 // Get all published articles
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, state } = req.query;
+    const { page = 1, limit = 10, category, state, breaking_news, featured } = req.query;
     const offset = (page - 1) * limit;
     
     let query = supabase
@@ -18,8 +18,16 @@ router.get('/', async (req, res) => {
         profiles(full_name, avatar_url)
       `)
       .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order('published_at', { ascending: false });
+
+    // Apply filters based on query parameters
+    if (breaking_news === 'true') {
+      query = query.eq('is_breaking', true);
+    }
+    
+    if (featured === 'true') {
+      query = query.eq('is_featured', true);
+    }
     
     if (category) {
       // First get the category ID by slug
@@ -47,6 +55,9 @@ router.get('/', async (req, res) => {
       }
     }
     
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+    
     const { data, error, count } = await query;
     
     if (error) throw error;
@@ -66,72 +77,6 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch articles'
-    });
-  }
-});
-
-// Get breaking news articles
-router.get('/breaking', async (req, res) => {
-  try {
-    const { limit = 10 } = req.query;
-    
-    const { data, error } = await supabase
-      .from('articles')
-      .select(`
-        *,
-        categories(name, slug),
-        states(name),
-        profiles(full_name, avatar_url)
-      `)
-      .eq('is_breaking', true)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(parseInt(limit));
-    
-    if (error) throw error;
-    
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error('Error fetching breaking news:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch breaking news'
-    });
-  }
-});
-
-// Get featured articles
-router.get('/featured', async (req, res) => {
-  try {
-    const { limit = 10 } = req.query;
-    
-    const { data, error } = await supabase
-      .from('articles')
-      .select(`
-        *,
-        categories(name, slug),
-        states(name),
-        profiles(full_name, avatar_url)
-      `)
-      .eq('is_featured', true)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(parseInt(limit));
-    
-    if (error) throw error;
-    
-    res.json({
-      success: true,
-      data
-    });
-  } catch (error) {
-    console.error('Error fetching featured articles:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch featured articles'
     });
   }
 });
@@ -402,6 +347,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('📝 Updating article:', id, 'with data:', req.body);
+    
     const updateData = {
       ...req.body,
       updated_at: new Date().toISOString()
@@ -419,18 +366,22 @@ router.put('/:id', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error updating article:', error);
+      throw error;
+    }
 
+    console.log('✅ Article updated successfully:', data);
     res.json({
       success: true,
       data,
       message: 'Article updated successfully'
     });
   } catch (error) {
-    console.error('Error updating article:', error);
+    console.error('❌ Error updating article:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update article'
+      error: error.message || 'Failed to update article'
     });
   }
 });
