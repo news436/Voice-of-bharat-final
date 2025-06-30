@@ -415,15 +415,49 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/view', async (req, res) => {
   try {
     const { id } = req.params;
+    const now = new Date().toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // Get current views data
+    const { data: currentData, error: fetchError } = await supabase
+      .from('articles')
+      .select('views, views_last_24h')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Update both total views and last 24h views
     const { data, error } = await supabase
       .from('articles')
-      .update({ views: supabase.raw('views + 1') })
+      .update({ 
+        views: (currentData.views || 0) + 1,
+        views_last_24h: (currentData.views_last_24h || 0) + 1,
+        last_viewed_at: now
+      })
       .eq('id', id)
       .select()
       .single();
+
+    // Log the view in analytics table
+    await supabase
+      .from('article_views')
+      .insert({
+        article_id: id,
+        viewed_at: now,
+        user_ip: req.ip
+      });
+
+    // Clean up old views (older than 24 hours)
+    await supabase
+      .from('article_views')
+      .delete()
+      .lt('viewed_at', oneDayAgo);
+
     if (error) throw error;
     res.json({ success: true, data });
   } catch (error) {
+    console.error('Error tracking article view:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -431,14 +465,60 @@ router.post('/:id/view', async (req, res) => {
 // Get total and per-article views
 router.get('/views/all', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const now = new Date().toISOString();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    // Get all articles with their views
+    const { data: articles, error: articlesError } = await supabase
       .from('articles')
-      .select('id, title, views');
-    if (error) throw error;
-    const totalViews = data.reduce((sum, a) => sum + (a.views || 0), 0);
-    res.json({ success: true, totalViews, articles: data });
+      .select(`
+        id,
+        title,
+        slug,
+        featured_image_url,
+        published_at,
+        views,
+        views_last_24h,
+        last_viewed_at
+      `)
+      .order('views', { ascending: false });
+
+    if (articlesError) throw articlesError;
+
+    // Calculate total views
+    const totalViews = articles.reduce((sum, article) => sum + (article.views || 0), 0);
+
+    // Get views in last 24 hours from analytics table
+    const { data: recentViews, error: recentError } = await supabase
+      .from('article_views')
+      .select('article_id')
+      .gte('viewed_at', oneDayAgo);
+
+    if (recentError) throw recentError;
+
+    // Update last 24h views count for each article
+    const viewsLast24h = recentViews.reduce((acc, view) => {
+      acc[view.article_id] = (acc[view.article_id] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Update the articles array with accurate last 24h views
+    const updatedArticles = articles.map(article => ({
+      ...article,
+      views_last_24h: viewsLast24h[article.id] || 0
+    }));
+
+    res.json({
+      success: true,
+      totalViews,
+      articles: updatedArticles
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Error fetching views stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
