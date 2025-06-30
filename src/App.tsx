@@ -44,7 +44,7 @@ const App = () => (
                 <Route path="/article/:slug" element={<MainLayout><ArticlePage /></MainLayout>} />
                 <Route path="/article/id/:id" element={<MainLayout><ArticlePage /></MainLayout>} />
                 <Route path="/state/:slug" element={<MainLayout><StatePage /></MainLayout>} />
-                <Route path="/video/:slug" element={<MainLayout><VideoPage /></MainLayout>} />
+                <Route path="/video/:id" element={<MainLayout><VideoPage /></MainLayout>} />
                 <Route path="/search" element={<MainLayout><SearchResults /></MainLayout>} />
                 <Route path="/videos" element={<MainLayout><VideoPage /></MainLayout>} />
                 <Route path="/live" element={<MainLayout><LivePage /></MainLayout>} />
