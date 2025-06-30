@@ -514,6 +514,16 @@ router.get('/preview/:id', async (req, res) => {
   const slug = article.slug || article.id;
   const articleUrl = `https://voiceofbharat.live/article/${slug}`;
 
+  // User-Agent check for bots
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = /bot|crawler|spider|crawling|facebookexternalhit|twitterbot|whatsapp|telegram/i.test(userAgent.toLowerCase());
+
+  if (!isBot) {
+    // For real users, redirect immediately
+    return res.redirect(302, articleUrl);
+  }
+
+  // For bots, serve meta tags and JS redirect fallback
   res.setHeader('Content-Type', 'text/html');
   res.send(`
     <!DOCTYPE html>
