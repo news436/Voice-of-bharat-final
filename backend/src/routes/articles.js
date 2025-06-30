@@ -523,7 +523,8 @@ router.get('/preview/:id', async (req, res) => {
       const title = article.title_hi || article.title;
       const description = article.summary_hi || article.summary || 'Latest news and updates from Voice of Bharat';
       const imageUrl = article.featured_image_url || 'https://voiceofbharat.live/logo.png';
-      const articleUrl = `https://voiceofbharat.live/article/${article.slug}`;
+      // Add unique parameter to force Facebook to treat as new URL
+      const articleUrl = `https://voiceofbharat.live/article/${article.slug}?preview=${article.id}`;
       const author = article.profiles?.full_name || 'Voice of Bharat';
       const category = article.categories?.name || 'News';
       const publishedDate = article.published_at ? new Date(article.published_at).toISOString() : '';
@@ -647,7 +648,8 @@ router.get('/p/:shortId', async (req, res) => {
       const title = article.title_hi || article.title;
       const description = article.summary_hi || article.summary || 'Latest news and updates from Voice of Bharat';
       const imageUrl = article.featured_image_url || 'https://voiceofbharat.live/logo.png';
-      const articleUrl = `https://voiceofbharat.live/article/${article.slug}`;
+      // Add unique parameter to force Facebook to treat as new URL
+      const articleUrl = `https://voiceofbharat.live/article/${article.slug}?preview=${article.id}`;
       const author = article.profiles?.full_name || 'Voice of Bharat';
       const category = article.categories?.name || 'News';
       const publishedDate = article.published_at ? new Date(article.published_at).toISOString() : '';
