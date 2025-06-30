@@ -186,8 +186,9 @@ export function testWhatsAppPreview(articleTitle: string, shortUrl: string, imag
 
 // Generate preview URL for social media sharing
 export function generatePreviewUrl(articleId: string): string {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
-  return `${API_BASE_URL}/articles/preview/${articleId}`;
+  // Always use the custom subdomain for previews
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
+  return `${PREVIEW_BASE_URL}/articles/preview/${articleId}`;
 }
 
 // Generate social sharing text with preview URL
@@ -248,28 +249,24 @@ export async function shareToWhatsAppWithPreview(articleTitle: string, articleId
 
 // Generate short preview URL for social media sharing
 export function generateShortPreviewUrl(articleId: string): string {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
-  
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
   // Create a shorter ID using base64 encoding (browser-compatible)
   // Handle Unicode characters properly
   const shortId = btoa(unescape(encodeURIComponent(articleId)))
     .replace(/\+/g, '-')  // Replace + with -
     .replace(/\//g, '_')  // Replace / with _
     .replace(/=/g, '');   // Remove padding
-  
-  const url = `${API_BASE_URL}/articles/p/${shortId}`;
+  const url = `${PREVIEW_BASE_URL}/articles/p/${shortId}`;
   console.log('🔗 Generated short preview URL:', url);
   return url;
 }
 
 // Generate even shorter preview URL (if you want to use just the first part of the ID)
 export function generateMinimalPreviewUrl(articleId: string): string {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
-  
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
   // Use just the first 8 characters of the article ID
   const shortId = articleId.substring(0, 8);
-  
-  return `${API_BASE_URL}/articles/p/${shortId}`;
+  return `${PREVIEW_BASE_URL}/articles/p/${shortId}`;
 }
 
 // Generate social sharing text with short preview URL
