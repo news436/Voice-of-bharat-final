@@ -234,7 +234,7 @@ export const NewsHeader = ({
             <img src="/logo.png" alt="Voice of Bharat Logo" className="h-10 sm:h-12 w-auto drop-shadow-sm" />
               <div className="hidden sm:block">
               <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight font-sans drop-shadow-sm">Voice Of Bharat</h1>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">भारत की आवाज़</p>
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 font-medium mt-1">वॉयस ऑफ भारत</p>
                 </div>
               </Link>
               {/* Mobile Title */}
@@ -453,7 +453,7 @@ export const NewsHeader = ({
               <img src="/logo.png" alt="Voice of Bharat Logo" className="h-10 w-auto" />
               <div>
                 <h1 className="text-lg font-extrabold text-black dark:text-white">Voice Of Bharat</h1>
-                <p className="text-xs text-gray-500">भारत की आवाज़</p>
+                <p className="text-xs text-gray-500">वॉयस ऑफ भारत</p>
               </div>
             </Link>
             <button
