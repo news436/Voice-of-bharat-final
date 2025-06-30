@@ -12,20 +12,40 @@ export const FeaturedArticlesManager = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [allArticles, setAllArticles] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchFeaturedArticles();
   }, []);
 
-  const fetchFeaturedArticles = async () => {
-    setIsLoading(true);
+  const fetchFeaturedArticles = async (pageNum = 1) => {
+    if (pageNum === 1) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
-      console.log('🔍 Fetching featured articles...');
-      const response = await apiClient.getFeaturedArticles();
+      console.log('🔍 Fetching featured articles for page:', pageNum);
+      const response = await apiClient.getFeaturedArticles({
+        page: pageNum,
+        limit: ITEMS_PER_PAGE
+      });
       console.log('✅ Featured articles response:', response);
+      
       if (response.success) {
-        setArticles(response.data || []);
+        if (pageNum === 1) {
+          setArticles(response.data || []);
+        } else {
+          setArticles(prev => [...prev, ...(response.data || [])]);
+        }
+        
+        // Check if there are more articles to load
+        setHasMore(response.data.length === ITEMS_PER_PAGE);
+        setPage(pageNum);
       } else {
         throw new Error(response.error || 'Failed to fetch featured articles');
       }
@@ -37,7 +57,11 @@ export const FeaturedArticlesManager = () => {
         variant: 'destructive'
       });
     } finally {
-      setIsLoading(false);
+      if (pageNum === 1) {
+        setIsLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   };
 
@@ -52,6 +76,12 @@ export const FeaturedArticlesManager = () => {
     }
   };
 
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      fetchFeaturedArticles(page + 1);
+    }
+  };
+
   const handleRemoveFeatured = async (articleId: string) => {
     try {
       console.log('🎯 Attempting to remove featured tag from article:', articleId);
@@ -62,7 +92,9 @@ export const FeaturedArticlesManager = () => {
       console.log('✅ Remove featured response:', response);
       if (response.success) {
         toast({ title: 'Success', description: 'Article removed from featured.' });
-        await fetchFeaturedArticles();
+        // Reset to first page and fetch articles
+        setPage(1);
+        await fetchFeaturedArticles(1);
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
@@ -82,7 +114,9 @@ export const FeaturedArticlesManager = () => {
       if (response.success) {
         toast({ title: 'Success', description: 'Article added to featured.' });
         setShowAddModal(false);
-        fetchFeaturedArticles();
+        // Reset to first page and fetch articles
+        setPage(1);
+        await fetchFeaturedArticles(1);
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
@@ -118,10 +152,10 @@ export const FeaturedArticlesManager = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {isLoading ? (
           <div className="col-span-full text-center py-12">Loading featured articles...</div>
-        ) : articles.slice(0, visibleCount).length === 0 ? (
+        ) : articles.length === 0 ? (
           <div className="col-span-full text-gray-500 text-center">No featured articles found.</div>
         ) : (
-          articles.slice(0, visibleCount).map(article => (
+          articles.map(article => (
             <div
               key={article.id}
               className="rounded-xl shadow bg-white dark:bg-gray-900 border border-yellow-200 dark:border-yellow-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
@@ -152,9 +186,15 @@ export const FeaturedArticlesManager = () => {
           ))
         )}
       </div>
-      {articles.length > visibleCount && (
+      {hasMore && !isLoading && (
         <div className="flex justify-center mt-4">
-          <Button onClick={() => setVisibleCount(visibleCount + 4)} variant="outline">View More</Button>
+          <Button 
+            onClick={handleLoadMore} 
+            variant="outline"
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? 'Loading...' : 'Load More'}
+          </Button>
         </div>
       )}
       {/* Add from Existing Modal */}

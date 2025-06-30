@@ -110,12 +110,20 @@ class ApiClient {
     return this.delete(`/articles/${id}`);
   }
 
-  async getBreakingNews() {
-    return this.get('/articles?breaking_news=true');
+  async getBreakingNews(params = {}) {
+    const queryString = new URLSearchParams({
+      breaking_news: 'true',
+      ...params
+    }).toString();
+    return this.get(`/articles?${queryString}`);
   }
 
-  async getFeaturedArticles() {
-    return this.get('/articles?featured=true');
+  async getFeaturedArticles(params = {}) {
+    const queryString = new URLSearchParams({
+      featured: 'true',
+      ...params
+    }).toString();
+    return this.get(`/articles?${queryString}`);
   }
 
   // Categories API

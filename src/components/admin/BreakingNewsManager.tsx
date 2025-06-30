@@ -25,20 +25,40 @@ export const BreakingNewsManager = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [allArticles, setAllArticles] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
     fetchBreakingNews();
   }, []);
 
-  const fetchBreakingNews = async () => {
-    setIsLoading(true);
+  const fetchBreakingNews = async (pageNum = 1) => {
+    if (pageNum === 1) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
-      console.log('🔍 Fetching breaking news...');
-      const response = await apiClient.getBreakingNews();
+      console.log('🔍 Fetching breaking news for page:', pageNum);
+      const response = await apiClient.getBreakingNews({
+        page: pageNum,
+        limit: ITEMS_PER_PAGE
+      });
       console.log('✅ Breaking news response:', response);
+      
       if (response.success) {
-        setArticles(response.data || []);
+        if (pageNum === 1) {
+          setArticles(response.data || []);
+        } else {
+          setArticles(prev => [...prev, ...(response.data || [])]);
+        }
+        
+        // Check if there are more articles to load
+        setHasMore(response.data.length === ITEMS_PER_PAGE);
+        setPage(pageNum);
       } else {
         throw new Error(response.error || 'Failed to fetch breaking news');
       }
@@ -50,7 +70,11 @@ export const BreakingNewsManager = () => {
         variant: 'destructive'
       });
     } finally {
-      setIsLoading(false);
+      if (pageNum === 1) {
+        setIsLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   };
 
@@ -158,7 +182,9 @@ export const BreakingNewsManager = () => {
       console.log('✅ Remove breaking response:', response);
       if (response.success) {
         toast({ title: 'Success', description: 'Article removed from breaking news.' });
-        await fetchBreakingNews();
+        // Reset to first page and fetch articles
+        setPage(1);
+        await fetchBreakingNews(1);
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
@@ -178,12 +204,20 @@ export const BreakingNewsManager = () => {
       if (response.success) {
         toast({ title: 'Success', description: 'Article added to breaking news.' });
         setShowAddModal(false);
-        fetchBreakingNews();
+        // Reset to first page and fetch articles
+        setPage(1);
+        await fetchBreakingNews(1);
       } else {
         throw new Error(response.error || 'Failed to update article');
       }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      fetchBreakingNews(page + 1);
     }
   };
 
@@ -215,42 +249,52 @@ export const BreakingNewsManager = () => {
         </Button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {articles.slice(0, visibleCount).map(article => (
-          <div
-            key={article.id}
-            className="rounded-xl shadow bg-white dark:bg-gray-900 border border-red-200 dark:border-red-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
-          >
-            {article.featured_image_url && (
-              <img
-                src={article.featured_image_url}
-                alt={article.title}
-                className="w-full h-28 object-cover"
-              />
-            )}
-            <div className="p-3 flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="destructive" className="animate-pulse">
-                  BREAKING
-                </Badge>
-                <span className="ml-auto text-xs text-gray-400">
-                  {new Date(article.created_at).toLocaleDateString()}
-                </span>
+        {articles.length === 0 ? (
+          <div className="col-span-full text-gray-500 text-center">No breaking news found.</div>
+        ) : (
+          articles.map(article => (
+            <div
+              key={article.id}
+              className="rounded-xl shadow bg-white dark:bg-gray-900 border border-red-200 dark:border-red-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
+            >
+              {article.featured_image_url && (
+                <img
+                  src={article.featured_image_url}
+                  alt={article.title}
+                  className="w-full h-28 object-cover"
+                />
+              )}
+              <div className="p-3 flex-1 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="destructive" className="animate-pulse">
+                    BREAKING
+                  </Badge>
+                  <span className="ml-auto text-xs text-gray-400">
+                    {new Date(article.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <h3 className="font-bold text-lg mb-1 line-clamp-2">{article.title}</h3>
+                <Button
+                  size="sm"
+                  className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
+                  onClick={() => handleRemoveBreaking(article.id)}
+                >
+                  Remove
+                </Button>
               </div>
-              <h3 className="font-bold text-lg mb-1 line-clamp-2">{article.title}</h3>
-              <Button
-                size="sm"
-                className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
-                onClick={() => handleRemoveBreaking(article.id)}
-              >
-                Remove
-              </Button>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
-      {articles.length > visibleCount && (
+      {hasMore && !isLoading && (
         <div className="flex justify-center mt-4">
-          <Button onClick={() => setVisibleCount(visibleCount + 4)} variant="outline">View More</Button>
+          <Button 
+            onClick={handleLoadMore} 
+            variant="outline"
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? 'Loading...' : 'Load More'}
+          </Button>
         </div>
       )}
       {/* Add from Existing Modal */}
@@ -266,7 +310,7 @@ export const BreakingNewsManager = () => {
             <h3 className="text-xl font-bold mb-4">Add Article to Breaking News</h3>
             <input
               type="text"
-              placeholder="Search articles by title or summary..."
+              placeholder="Search articles by title..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
