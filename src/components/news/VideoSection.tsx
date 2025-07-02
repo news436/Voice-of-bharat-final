@@ -1,29 +1,36 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-interface VideoSectionProps {
-  videos: any[];
-}
-
-export const VideoSection = ({ videos }: VideoSectionProps) => {
+export const VideoSection = () => {
   const { t } = useLanguage();
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchVideos = async () => {
+      setLoading(true);
+      const { data } = await supabase.from('videos').select('*').order('created_at', { ascending: false }).limit(6);
+      setVideos(data || []);
+      setLoading(false);
+    };
+    fetchVideos();
+  }, []);
+
+  if (loading) {
+    return <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />;
+  }
   if (videos.length === 0) return null;
 
   return (
     <section className="mb-12">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center mb-6">
         <h2 className="text-2xl font-semibold text-black dark:text-white mb-2 inline-block relative">
           {t('latest_videos')}
           <span className="block h-1 bg-red-600 rounded-full mt-1 w-full" style={{ maxWidth: '100%' }} />
         </h2>
-        <Link
-          to="/videos"
-          className="text-red-600 hover:text-red-700 font-medium"
-        >
-          {t('view_all')}
-        </Link>
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
@@ -59,3 +66,5 @@ export const VideoSection = ({ videos }: VideoSectionProps) => {
     </section>
   );
 };
+
+export default VideoSection;

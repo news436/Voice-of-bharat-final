@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { Copy, ExternalLink, BarChart3, Calendar, MousePointer } from 'lucide-react';
 import { getShortUrlAnalytics } from '@/utils/urlShortener';
-import apiClient from '@/utils/api';
 
 interface ShortUrlData {
   id: string;
@@ -33,7 +32,8 @@ export const UrlShortenerManager = () => {
 
   const fetchShortUrls = async (pageNum: number = 1) => {
     try {
-      const response = await apiClient.get(`/redirect?page=${pageNum}&limit=20`);
+      // Replace with Supabase query
+      // const response = await apiClient.get(`/redirect?page=${pageNum}&limit=20`);
       if (response.success) {
         if (pageNum === 1) {
           setShortUrls(response.data);
@@ -64,7 +64,8 @@ export const UrlShortenerManager = () => {
   const generateShortUrlsForAllArticles = async () => {
     setGenerating(true);
     try {
-      const response = await apiClient.post('/redirect/generate-all');
+      // Replace with Supabase query
+      // const response = await apiClient.post('/redirect/generate-all');
       if (response.success) {
         toast({
           title: "Success!",

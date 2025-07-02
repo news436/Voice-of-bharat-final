@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Edit, Trash2, AlertTriangle, Eye, EyeOff, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import apiClient from '@/utils/api';
 
 export const BreakingNewsManager = () => {
   const [articles, setArticles] = useState<any[]>([]);
@@ -36,22 +35,24 @@ export const BreakingNewsManager = () => {
 
   const fetchBreakingNews = async (pageNum = 1) => {
     if (pageNum === 1) {
-      setIsLoading(true);
+    setIsLoading(true);
     } else {
       setIsLoadingMore(true);
     }
 
     try {
       console.log('🔍 Fetching breaking news for page:', pageNum);
-      const response = await apiClient.getBreakingNews({
-        page: pageNum,
-        limit: ITEMS_PER_PAGE
-      });
+      const response = await supabase
+        .from('articles')
+        .select('*')
+        .eq('is_breaking', true)
+        .order('created_at', { ascending: false })
+        .range((pageNum - 1) * ITEMS_PER_PAGE, pageNum * ITEMS_PER_PAGE - 1);
       console.log('✅ Breaking news response:', response);
       
-      if (response.success) {
+      if (response.data) {
         if (pageNum === 1) {
-          setArticles(response.data || []);
+        setArticles(response.data || []);
         } else {
           setArticles(prev => [...prev, ...(response.data || [])]);
         }
@@ -60,7 +61,7 @@ export const BreakingNewsManager = () => {
         setHasMore(response.data.length === ITEMS_PER_PAGE);
         setPage(pageNum);
       } else {
-        throw new Error(response.error || 'Failed to fetch breaking news');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to fetch breaking news');
       }
     } catch (error) {
       console.error('❌ Error fetching breaking news:', error);
@@ -71,7 +72,7 @@ export const BreakingNewsManager = () => {
       });
     } finally {
       if (pageNum === 1) {
-        setIsLoading(false);
+      setIsLoading(false);
       } else {
         setIsLoadingMore(false);
       }
@@ -80,8 +81,11 @@ export const BreakingNewsManager = () => {
 
   const fetchAllArticles = async () => {
     try {
-      const response = await apiClient.getArticles({ limit: 100 });
-      if (response.success) {
+      const response = await supabase
+        .from('articles')
+        .select('*')
+        .eq('is_breaking', false);
+      if (response.data) {
         setAllArticles(response.data || []);
       }
     } catch (error) {
@@ -105,15 +109,18 @@ export const BreakingNewsManager = () => {
     if (!confirm('Are you sure you want to delete this breaking news?')) return;
 
     try {
-      const response = await apiClient.deleteArticle(articleId);
-      if (response.success) {
+      const response = await supabase
+        .from('articles')
+        .delete()
+        .eq('id', articleId);
+      if (response.data) {
         toast({
           title: "Success",
           description: "Breaking news deleted successfully.",
         });
         fetchBreakingNews();
       } else {
-        throw new Error(response.error || 'Failed to delete article');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to delete article');
       }
     } catch (error: any) {
       toast({
@@ -126,17 +133,18 @@ export const BreakingNewsManager = () => {
 
   const toggleBreakingStatus = async (articleId: string, currentStatus: boolean) => {
     try {
-      const response = await apiClient.updateArticle(articleId, { 
-        is_breaking: !currentStatus 
-      });
-      if (response.success) {
+      const response = await supabase
+        .from('articles')
+        .update({ is_breaking: !currentStatus })
+        .eq('id', articleId);
+      if (response.data) {
         toast({
           title: "Success",
           description: `Article ${!currentStatus ? 'marked as' : 'removed from'} breaking news.`,
         });
         fetchBreakingNews();
       } else {
-        throw new Error(response.error || 'Failed to update article');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to update article');
       }
     } catch (error: any) {
       toast({
@@ -150,18 +158,21 @@ export const BreakingNewsManager = () => {
   const togglePublishStatus = async (articleId: string, currentStatus: string) => {
     try {
       const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-      const response = await apiClient.updateArticle(articleId, { 
-        status: newStatus,
-        published_at: newStatus === 'published' ? new Date().toISOString() : null
-      });
-      if (response.success) {
+      const response = await supabase
+        .from('articles')
+        .update({ 
+          status: newStatus,
+          published_at: newStatus === 'published' ? new Date().toISOString() : null
+        })
+        .eq('id', articleId);
+      if (response.data) {
         toast({
           title: "Success",
           description: `Article ${newStatus === 'published' ? 'published' : 'unpublished'} successfully.`,
         });
         fetchBreakingNews();
       } else {
-        throw new Error(response.error || 'Failed to update article');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to update article');
       }
     } catch (error: any) {
       toast({
@@ -175,24 +186,28 @@ export const BreakingNewsManager = () => {
   const handleRemoveBreaking = async (articleId: string) => {
     try {
       console.log('🎯 Attempting to remove breaking tag from article:', articleId);
-      const response = await apiClient.updateArticle(articleId, { 
-        is_breaking: false,
-        updated_at: new Date().toISOString()
-      });
+      const response = await supabase
+        .from('articles')
+        .update({ 
+          is_breaking: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', articleId)
+        .select();
       console.log('✅ Remove breaking response:', response);
-      if (response.success) {
+      if (!response.error) {
         toast({ title: 'Success', description: 'Article removed from breaking news.' });
         // Reset to first page and fetch articles
         setPage(1);
         await fetchBreakingNews(1);
       } else {
-        throw new Error(response.error || 'Failed to update article');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to update article');
       }
     } catch (error: any) {
       console.error('❌ Error removing breaking tag:', error);
       toast({ 
         title: 'Error', 
-        description: `Failed to remove breaking tag: ${error.message}`, 
+        description: `Failed to remove breaking tag: ${error?.message || String(error)}`, 
         variant: 'destructive' 
       });
     }
@@ -200,15 +215,18 @@ export const BreakingNewsManager = () => {
 
   const handleAddToBreaking = async (articleId: string) => {
     try {
-      const response = await apiClient.updateArticle(articleId, { is_breaking: true });
-      if (response.success) {
+      const response = await supabase
+        .from('articles')
+        .update({ is_breaking: true })
+        .eq('id', articleId);
+      if (response.data) {
         toast({ title: 'Success', description: 'Article added to breaking news.' });
         setShowAddModal(false);
         // Reset to first page and fetch articles
         setPage(1);
         await fetchBreakingNews(1);
       } else {
-        throw new Error(response.error || 'Failed to update article');
+        throw new Error(response.error?.message || String(response.error) || 'Failed to update article');
       }
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -253,36 +271,36 @@ export const BreakingNewsManager = () => {
           <div className="col-span-full text-gray-500 text-center">No breaking news found.</div>
         ) : (
           articles.map(article => (
-            <div
-              key={article.id}
-              className="rounded-xl shadow bg-white dark:bg-gray-900 border border-red-200 dark:border-red-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
-            >
-              {article.featured_image_url && (
-                <img
-                  src={article.featured_image_url}
-                  alt={article.title}
-                  className="w-full h-28 object-cover"
-                />
-              )}
-              <div className="p-3 flex-1 flex flex-col">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="destructive" className="animate-pulse">
-                    BREAKING
-                  </Badge>
-                  <span className="ml-auto text-xs text-gray-400">
-                    {new Date(article.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-                <h3 className="font-bold text-lg mb-1 line-clamp-2">{article.title}</h3>
-                <Button
-                  size="sm"
-                  className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
-                  onClick={() => handleRemoveBreaking(article.id)}
-                >
-                  Remove
-                </Button>
+          <div
+            key={article.id}
+            className="rounded-xl shadow bg-white dark:bg-gray-900 border border-red-200 dark:border-red-700 flex flex-col overflow-hidden hover:shadow-xl transition-all"
+          >
+            {article.featured_image_url && (
+              <img
+                src={article.featured_image_url}
+                alt={article.title}
+                className="w-full h-28 object-cover"
+              />
+            )}
+            <div className="p-3 flex-1 flex flex-col">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="destructive" className="animate-pulse">
+                  BREAKING
+                </Badge>
+                <span className="ml-auto text-xs text-gray-400">
+                  {new Date(article.created_at).toLocaleDateString()}
+                </span>
               </div>
+              <h3 className="font-bold text-lg mb-1 line-clamp-2">{article.title}</h3>
+              <Button
+                size="sm"
+                className="mt-auto w-full bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => handleRemoveBreaking(article.id)}
+              >
+                Remove
+              </Button>
             </div>
+          </div>
           ))
         )}
       </div>

@@ -12,23 +12,26 @@ import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
 import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
-import apiClient from '@/utils/api';
+import { SupabaseArticle } from '@/integrations/supabase/types';
+import { useArticleCache } from '@/contexts/ArticleCacheContext';
 
 const ArticlePage = () => {
   const { slug, id } = useParams<{ slug?: string; id?: string }>();
-  const [article, setArticle] = useState<any>(null);
-  const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
+  const [article, setArticle] = useState<SupabaseArticle | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<SupabaseArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showShareDropdown, setShowShareDropdown] = useState(false);
   const { language } = useLanguage();
   const shareDropdownRef = useRef<HTMLDivElement>(null);
+  const { getArticle, setArticle: setArticleCache } = useArticleCache();
+  const [isShowingRecentFallback, setIsShowingRecentFallback] = useState(false);
 
   // Share functions
   const copyArticleLink = async () => {
     try {
-      const previewUrl = generatePreviewUrl(article.id);
+      const previewUrl = generatePreviewUrl(article?.id || '');
       await copyToClipboard(previewUrl);
       setCopied(true);
       toast({
@@ -50,10 +53,10 @@ const ArticlePage = () => {
   const shareOnWhatsApp = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      console.log('📱 WhatsApp share - Article ID:', article.id);
+      console.log('📱 WhatsApp share - Article ID:', article?.id);
       
       // Use the new short preview URL function for cleaner sharing
-      await shareToWhatsAppWithShortPreview(title, article.id);
+      await shareToWhatsAppWithShortPreview(title, article?.id || '');
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -66,7 +69,7 @@ const ArticlePage = () => {
 
   const shareOnFacebook = async () => {
     try {
-      const previewUrl = generatePreviewUrl(article.id);
+      const previewUrl = generatePreviewUrl(article?.id || '');
       // Add multiple cache-busting parameters to force Facebook to fetch fresh meta tags
       const cacheBuster = Date.now();
       const randomId = Math.random().toString(36).substring(7);
@@ -85,7 +88,7 @@ const ArticlePage = () => {
   const shareOnTwitter = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithShortPreview(title, article.id, 'twitter');
+      const text = generateSocialShareTextWithShortPreview(title, article?.id || '', 'twitter');
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
       window.open(twitterUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
@@ -101,7 +104,7 @@ const ArticlePage = () => {
   const shareOnInstagram = async () => {
     try {
       const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithShortPreview(title, article.id, 'instagram');
+      const text = generateSocialShareTextWithShortPreview(title, article?.id || '', 'instagram');
       
       // Instagram doesn't support direct URL sharing, so we copy to clipboard
       // Use the mobile-friendly clipboard utility
@@ -126,7 +129,7 @@ const ArticlePage = () => {
       // Use native share if available
       try {
         const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-        const text = generateSocialShareTextWithShortPreview(title, article.id);
+        const text = generateSocialShareTextWithShortPreview(title, article?.id || '');
         
         // For Web Share API, only include text (which already contains the URL)
         // Don't include url parameter to avoid duplication
@@ -173,67 +176,56 @@ const ArticlePage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       setLoading(true);
+      let cachedArticle = id ? getArticle(id) : slug ? getArticle(slug) : undefined;
+      if (cachedArticle) {
+        setArticle(cachedArticle as SupabaseArticle);
+        setLoading(false);
+        return;
+      }
       try {
         let response;
         
-        console.log('🔍 Fetching article with params:', { slug, id });
-        
-        // Use appropriate API call based on parameter
         if (id) {
-          // Fetch by ID
-          console.log('📰 Fetching article by ID:', id);
-          response = await apiClient.getArticleById(id);
+          response = await supabase.from('articles').select(`*, profiles:author_id (full_name, email, role), categories:category_id (name, slug)`).eq('id', id);
         } else if (slug) {
-          // Fetch by slug
-          console.log('📰 Fetching article by slug:', slug);
-          response = await apiClient.getArticle(slug);
+          response = await supabase.from('articles').select(`*, profiles:author_id (full_name, email, role), categories:category_id (name, slug)`).eq('slug', slug);
         } else {
-          console.log('❌ No slug or id provided');
           setNotFound(true);
           setLoading(false);
           return;
         }
 
-        console.log('📡 API Response:', response);
-
-        if (!response.success || !response.data) {
-          console.log('❌ Article not found or API error:', response);
+        if (!response.data || response.data.length === 0) {
           setNotFound(true);
           setLoading(false);
           return;
         }
-        
-        console.log('✅ Article found:', response.data.title);
-        setArticle(response.data);
-        
-        // Test short URL generation
-        testShortUrlGeneration(response.data.id);
-        
+        setArticle(response.data[0] as SupabaseArticle);
+        setArticleCache(response.data[0]);
+        testShortUrlGeneration(response.data[0].id);
         // Update meta tags for social media sharing
-        const title = language === 'hi' && response.data.title_hi ? response.data.title_hi : response.data.title;
-        const description = language === 'hi' && response.data.summary_hi ? response.data.summary_hi : response.data.summary;
-        const image = response.data.featured_image_url ? 
-          (response.data.featured_image_url.startsWith('http') ? 
-            response.data.featured_image_url : 
-            `${window.location.origin}${response.data.featured_image_url}`) : 
+        const title = language === 'hi' && response.data[0].title_hi ? response.data[0].title_hi : response.data[0].title;
+        const description = language === 'hi' && response.data[0].summary_hi ? response.data[0].summary_hi : response.data[0].summary;
+        const image = response.data[0].featured_image_url ? 
+          (response.data[0].featured_image_url.startsWith('http') ? 
+            response.data[0].featured_image_url : 
+            `${window.location.origin}${response.data[0].featured_image_url}`) : 
           `${window.location.origin}/logo.png`;
-        const shortUrl = await getShortUrl(response.data.id);
-        
-        // Prepare tags for meta tags
+        let shortUrl = '';
+        if (response.data[0].id) {
+          try {
+            shortUrl = await getShortUrl(response.data[0].id);
+          } catch (err) {
+            shortUrl = window.location.href;
+          }
+        } else {
+          shortUrl = window.location.href;
+        }
         const tags = [];
-        if (response.data.categories?.name) {
-          tags.push(response.data.categories.name);
-        }
-        if (response.data.states?.name) {
-          tags.push(response.data.states.name);
-        }
-        if (response.data.is_breaking) {
-          tags.push('Breaking News');
-        }
-        if (response.data.is_featured) {
-          tags.push('Featured');
-        }
-        
+        if (response.data[0].categories?.name) tags.push(response.data[0].categories.name);
+        if (response.data[0].states?.name) tags.push(response.data[0].states.name);
+        if (response.data[0].is_breaking) tags.push('Breaking News');
+        if (response.data[0].is_featured) tags.push('Featured');
         updateMetaTags({
           title: `${title} - Voice of Bharat`,
           description: description || 'Latest news and updates from Voice of Bharat',
@@ -242,45 +234,63 @@ const ArticlePage = () => {
           type: 'article',
           siteName: 'Voice of Bharat',
           twitterHandle: '@voiceofbharat',
-          author: response.data.profiles?.full_name || response.data.publisher_name || 'Voice of Bharat',
-          publishedTime: response.data.published_at,
-          section: response.data.categories?.name || 'News',
+          author: response.data[0].profiles?.full_name || response.data[0].publisher_name || 'Voice of Bharat',
+          publishedTime: response.data[0].published_at,
+          section: response.data[0].categories?.name || 'News',
           tags: tags
         });
-        
-        // Fetch related articles using API client
-        try {
-          const relatedResponse = await apiClient.get(`/articles/${response.data.slug}/related?limit=5`);
-          if (relatedResponse.success && relatedResponse.data && relatedResponse.data.length > 0) {
-            setRelatedArticles(relatedResponse.data);
-          } else {
-            // Fallback: fetch recent articles if no related articles found
-            const recentResponse = await apiClient.getArticles({ 
-              limit: 5, 
-              exclude: response.data.id 
-            });
-            if (recentResponse.success && recentResponse.data) {
-              setRelatedArticles(recentResponse.data);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching related articles:', err);
-          setRelatedArticles([]);
-        }
       } catch (error) {
-        console.error('Error fetching article:', error);
         setNotFound(true);
       } finally {
         setLoading(false);
       }
     };
     fetchArticle();
-    
-    // Reset meta tags when component unmounts
     return () => {
       resetMetaTags();
     };
   }, [slug, id, language]);
+
+  // Fetch related/recent articles whenever article changes
+  useEffect(() => {
+    const fetchRelatedOrRecent = async () => {
+      if (!article) return;
+      try {
+        // Try to fetch articles from the same category, excluding the current article
+        const categoryId = article.category_id;
+        let relatedResponse = null;
+        if (categoryId) {
+          relatedResponse = await supabase
+            .from('articles')
+            .select()
+            .eq('category_id', categoryId)
+            .neq('id', article.id)
+            .order('published_at', { ascending: false })
+            .limit(5);
+        }
+        if (relatedResponse && relatedResponse.data && relatedResponse.data.length > 0) {
+          setRelatedArticles(relatedResponse.data as SupabaseArticle[]);
+          setIsShowingRecentFallback(false);
+        } else {
+          // Fallback: fetch recent articles if no related articles found
+          const recentResponse = await supabase
+            .from('articles')
+            .select()
+            .neq('id', article.id)
+            .order('published_at', { ascending: false })
+            .limit(5);
+          if (recentResponse.data) {
+            setRelatedArticles(recentResponse.data as SupabaseArticle[]);
+            setIsShowingRecentFallback(true);
+          }
+        }
+      } catch (err) {
+        setRelatedArticles([]);
+        setIsShowingRecentFallback(false);
+      }
+    };
+    fetchRelatedOrRecent();
+  }, [article]);
 
   // Update meta tags when article loads
   useEffect(() => {
@@ -293,11 +303,20 @@ const ArticlePage = () => {
     };
   }, [article]);
 
-  useEffect(() => {
-    if (article?.id) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/articles/${article.id}/view`, { method: 'POST' });
+  // TODO: Re-implement with Supabase if needed
+  // useEffect(() => {
+  //   if (article?.id) {
+  //     fetch(`${import.meta.env.VITE_API_BASE_URL}/articles/${article.id}/view`, { method: 'POST' });
+  //   }
+  // }, [article?.id]);
+
+  function getOptimizedCloudinaryUrl(url: string) {
+    if (!url) return url;
+    if (url.includes('res.cloudinary.com') && !url.includes('f_auto')) {
+      return url.replace('/upload/', '/upload/f_auto,q_auto/');
     }
-  }, [article?.id]);
+    return url;
+  }
 
   if (loading) {
     return (
@@ -402,7 +421,7 @@ const ArticlePage = () => {
                     style={{objectFit: 'contain', background: 'transparent'}}
                   />
                   <img
-                    src={article.featured_image_url}
+                    src={getOptimizedCloudinaryUrl(article.featured_image_url)}
                     alt={title}
                     className="w-full h-auto object-cover"
                   />
@@ -410,7 +429,9 @@ const ArticlePage = () => {
                 </div>
               )}
               {article.featured_image_url && (
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4 mt-4 text-black dark:text-white drop-shadow-lg px-4 sm:px-8 mt-6">
+                <h1
+                  className={`text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 mt-4 text-black dark:text-white drop-shadow-lg px-4 sm:px-8 mt-6 ${language === 'hi' ? 'leading-relaxed' : 'leading-tight'}`}
+                >
                   {title}
                 </h1>
               )}
@@ -504,11 +525,12 @@ const ArticlePage = () => {
                 />
 
                 {/* Video Section - Display at the bottom with reduced size */}
-                {article.youtube_video_url && (
+                {(article.youtube_video_url || article.facebook_video_url) && (
                   <div className="mt-8">
-                    <ArticleVideoPlayer 
-                      youtubeUrl={article.youtube_video_url} 
-                      title={title} 
+                    <ArticleVideoPlayer
+                      youtubeUrl={article.youtube_video_url}
+                      facebookUrl={article.facebook_video_url}
+                      title={title}
                     />
                   </div>
                 )}
@@ -525,67 +547,56 @@ const ArticlePage = () => {
               </CardContent>
             </Card>
 
-            {/* Related Articles Placeholder */}
-            <Card className="shadow-lg border-0 bg-white dark:bg-gray-900">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Related Articles ({relatedArticles.length})
-                </h3>
-                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                  {relatedArticles.length > 0 ? (
-                    relatedArticles.map((relatedArticle) => {
-                      const relatedTitle = language === 'hi' && relatedArticle.title_hi 
-                        ? relatedArticle.title_hi 
-                        : relatedArticle.title;
-                      
-                      return (
-                        <Link 
-                          key={relatedArticle.id} 
-                          to={`/article/${relatedArticle.slug}`}
-                          className="flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-gray-800 p-3 rounded-lg transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                        >
-                          <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
-                            {relatedArticle.featured_image_url ? (
-                              <img
-                                src={relatedArticle.featured_image_url}
-                                alt={relatedTitle}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">📰</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+            {/* Related Articles Modern Card Grid */}
+            <section className="mb-8">
+              <h3 className="text-xl font-bold text-black dark:text-white mb-4 border-b-2 border-red-600 pb-2 inline-block">
+                {isShowingRecentFallback ? 'Recent Articles' : 'Related Articles'}
+              </h3>
+              {relatedArticles.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  {relatedArticles.map((relatedArticle) => {
+                    const relatedTitle = language === 'hi' && relatedArticle.title_hi 
+                      ? relatedArticle.title_hi 
+                      : relatedArticle.title;
+                    return (
+                      <Link
+                        key={relatedArticle.id}
+                        to={`/article/${relatedArticle.slug}`}
+                        className="block group focus:outline-none focus:ring-2 focus:ring-red-600 rounded-2xl"
+                      >
+                        <div className="rounded-2xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-row overflow-hidden hover:shadow-2xl transition-all hover:-translate-y-1 min-h-[96px] max-h-[120px]">
+                          {/* Image */}
+                          {relatedArticle.featured_image_url ? (
+                            <img
+                              src={getOptimizedCloudinaryUrl(relatedArticle.featured_image_url)}
+                              alt={relatedTitle}
+                              className="w-32 h-full object-cover group-hover:scale-105 transition-transform duration-300 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-32 h-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center flex-shrink-0">
+                              <span className="text-4xl text-gray-500 dark:text-gray-400">📰</span>
+                            </div>
+                          )}
+                          {/* Content */}
+                          <div className="p-4 flex-1 flex flex-col justify-center">
+                            <h4 className="font-semibold text-base line-clamp-2 text-black dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                               {relatedTitle}
                             </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <p className="text-xs text-gray-500">
-                                {formatRelativeTime(relatedArticle.published_at)}
-                              </p>
-                              {relatedArticle.categories && (
-                                <Badge variant="outline" className="text-xs px-2 py-0">
-                                  {relatedArticle.categories.name}
-                                </Badge>
-              )}
-            </div>
                           </div>
-                        </Link>
-                      );
-                    })
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="text-4xl mb-2">📰</div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        No related articles found
-                      </p>
-                    </div>
-                  )}
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">📰</div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No related articles found
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
         </div>
         

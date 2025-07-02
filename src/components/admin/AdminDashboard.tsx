@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { AboutUsManager } from './AboutUsManager';
-import apiClient from '@/utils/api';
 
 type AdminSection = "articles" | "categories" | "analytics";
 
@@ -53,21 +52,21 @@ export const AdminDashboard = ({
     const fetchDashboardData = async () => {
       try {
         // Fetch articles for stats
-        const articlesResponse = await apiClient.getArticles({ limit: 100 });
-        const articles = articlesResponse.success ? articlesResponse.data : [];
+        const articlesResponse = await supabase.from('articles').select('*').limit(100);
+        const articles = articlesResponse.data || [];
         
         // Fetch videos for stats
-        const videosResponse = await apiClient.getVideos();
-        const videos = videosResponse.success ? videosResponse.data : [];
+        const videosResponse = await supabase.from('videos').select('*');
+        const videos = videosResponse.data || [];
         
         // Fetch live streams for stats
-        const streamsResponse = await apiClient.getLiveStreams();
-        const streams = streamsResponse.success ? streamsResponse.data : [];
+        const streamsResponse = await supabase.from('live_streams').select('*').eq('is_active', true);
+        const streams = streamsResponse.data || [];
         
         // Fetch views stats
-        const viewsResponse = await apiClient.get('/articles/views/all');
-        if (viewsResponse.success) {
-          setViewsStats({ totalViews: viewsResponse.totalViews, articles: viewsResponse.articles });
+        const viewsResponse = await supabase.from('analytics').select('*');
+        if (viewsResponse.data) {
+          setViewsStats({ totalViews: viewsResponse.data.length, articles: viewsResponse.data });
         }
         
         const totalArticles = articles.length;
@@ -75,7 +74,7 @@ export const AdminDashboard = ({
         const draftArticles = articles.filter((a: any) => a.status === 'draft').length;
         const breakingNews = articles.filter((a: any) => a.is_breaking).length;
         const totalVideos = videos.length;
-        const activeStreams = streams.filter((s: any) => s.is_active).length;
+        const activeStreams = streams.length;
 
         setStats(prev => ({ 
           ...prev, 
@@ -88,8 +87,12 @@ export const AdminDashboard = ({
         }));
 
         // Fetch recent articles
-        const recentResponse = await apiClient.getArticles({ limit: 5 });
-        if (recentResponse.success) {
+        const recentResponse = await supabase
+          .from('articles')
+          .select('*, profiles:author_id(full_name), categories:category_id(name)')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (recentResponse.data) {
           setRecentArticles(recentResponse.data);
         }
       } catch (error) {
@@ -275,28 +278,6 @@ export const AdminDashboard = ({
             </Button>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="mt-6">
-        <h2 className="text-lg font-bold mb-2">Total Article Views: {viewsStats.totalViews}</h2>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border">
-            <thead>
-              <tr>
-                <th className="border px-2 py-1">Article</th>
-                <th className="border px-2 py-1">Views</th>
-              </tr>
-            </thead>
-            <tbody>
-              {viewsStats.articles.map((a) => (
-                <tr key={a.id}>
-                  <td className="border px-2 py-1">{a.title}</td>
-                  <td className="border px-2 py-1 text-center">{a.views || 0}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </main>
       </div>

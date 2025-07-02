@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Menu, X, User, Moon, Sun, Globe, Radio, Users } from 'lucide-react';
+import { Search, Menu, X, User, Moon, Sun, Globe, Radio, Users, Tag, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +41,9 @@ export const NewsHeader = ({
   const [dropdownCoords, setDropdownCoords] = useState<{ left: number; top: number } | null>(null);
   const [dropdownContainer, setDropdownContainer] = useState<HTMLElement | null>(null);
   const statesButtonRef = useRef<HTMLButtonElement>(null);
+  const [categoryDropdownCoords, setCategoryDropdownCoords] = useState<{ left: number; top: number } | null>(null);
+  const [categorySearch, setCategorySearch] = useState('');
+  const categoryButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -338,29 +341,64 @@ export const NewsHeader = ({
                 );
               })}
                     <div className="relative group">
-            <button
-              type="button"
+                      <button
+                        type="button"
+                        ref={categoryButtonRef}
+                        onMouseEnter={() => {
+                          if (categoryButtonRef.current) {
+                            const rect = categoryButtonRef.current.getBoundingClientRect();
+                            setCategoryDropdownCoords({ left: rect.left, top: rect.bottom + window.scrollY });
+                          }
+                          setIsViewMoreOpen(true);
+                        }}
+                        onMouseLeave={() => setIsViewMoreOpen(false)}
+                        onFocus={() => {
+                          if (categoryButtonRef.current) {
+                            const rect = categoryButtonRef.current.getBoundingClientRect();
+                            setCategoryDropdownCoords({ left: rect.left, top: rect.bottom + window.scrollY });
+                          }
+                          setIsViewMoreOpen(true);
+                        }}
+                        onBlur={() => setIsViewMoreOpen(false)}
+                        onClick={() => setIsViewMoreOpen((v) => !v)}
                         className="font-bold text-black dark:text-white text-base px-6 py-2 rounded-full bg-white dark:bg-black shadow hover:bg-gray-200 dark:hover:bg-gray-800 transition-all duration-200 border border-gray-200 dark:border-gray-700 flex items-center gap-1"
-              aria-haspopup="true"
-                        aria-expanded="false"
-            >
+                        aria-haspopup="true"
+                        aria-expanded={isViewMoreOpen}
+                        onMouseOver={() => setIsViewMoreOpen(true)}
+                      >
                         {t('view_more')}
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            </button>
-                      <div className="absolute right-0 mt-2 min-w-[180px] max-h-80 overflow-y-auto bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 py-2 hidden group-hover:block group-focus-within:block animate-fade-in">
-                        {categories.slice(6).map((category) => {
-                          const catName = language === 'hi' && category.name_hi ? category.name_hi : category.name;
-                          return (
-                            <Link
-                              key={category.id}
-                              to={`/category/${category.slug}`}
-                              className="block px-5 py-2 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:bg-gray-300 dark:focus:bg-gray-700 outline-none rounded font-medium text-base"
-                            >
-                              {catName}
-                            </Link>
-                          );
-                        })}
-                      </div>
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      {isViewMoreOpen && categoryDropdownCoords && createPortal(
+                        <div
+                          className="min-w-[180px] max-h-80 overflow-y-auto bg-white dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] py-1 animate-fade-in p-0"
+                          style={{ position: 'absolute', left: categoryDropdownCoords.left, top: categoryDropdownCoords.top }}
+                          onMouseLeave={() => setIsViewMoreOpen(false)}
+                          onMouseEnter={() => setIsViewMoreOpen(true)}
+                        >
+                          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {categories.slice(6).map((category) => {
+                              const catName = language === 'hi' && category.name_hi ? category.name_hi : category.name;
+                              return (
+                                <Link
+                                  key={category.id}
+                                  to={`/category/${category.slug}`}
+                                  className="block px-5 py-2 text-black dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:bg-gray-300 dark:focus:bg-gray-700 outline-none rounded font-medium text-base cursor-pointer"
+                                  tabIndex={0}
+                                  onClick={() => setIsViewMoreOpen(false)}
+                                  onKeyDown={e => { if (e.key === 'Enter') setIsViewMoreOpen(false); }}
+                                >
+                                  {catName}
+                                </Link>
+                              );
+                            })}
+                            {categories.slice(6).length === 0 && (
+                              <div className="px-5 py-2 text-gray-400 text-center">{t('no_more_categories') || 'No more categories'}</div>
+                            )}
+                          </div>
+                        </div>,
+                        document.body
+                      )}
                     </div>
                   </>
                 ) : (

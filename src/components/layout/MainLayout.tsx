@@ -7,6 +7,7 @@ import { NewsletterSignup } from '@/components/news/NewsletterSignup';
 import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SupportUsCta } from '../news/SupportUsCta';
+import { ArticleCacheProvider } from '@/contexts/ArticleCacheContext';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -54,20 +55,22 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <NewsHeader 
-        categories={categories} 
-        states={states}
-        breakingNews={breakingNews}
-        language={language}
-        pathname={location.pathname}
-      />
-      <main className="flex-1">
-        {children}
-      </main>
-      {location.pathname !== '/support-us' && <SupportUsCta />}
-      <Footer categories={categories} />
-      {showNewsletterPopup && <NewsletterSignup onClose={handleClosePopup} />}
-    </div>
+    <ArticleCacheProvider>
+      <div className="flex flex-col min-h-screen">
+        <NewsHeader 
+          categories={categories} 
+          states={states}
+          breakingNews={breakingNews}
+          language={language}
+          pathname={location.pathname}
+        />
+        <main className="flex-1">
+          {children}
+        </main>
+        {location.pathname !== '/support-us' && <SupportUsCta />}
+        <Footer categories={categories} />
+        {showNewsletterPopup && <NewsletterSignup onClose={handleClosePopup} />}
+      </div>
+    </ArticleCacheProvider>
   );
 }; 

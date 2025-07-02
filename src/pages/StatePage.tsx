@@ -6,15 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Play, MapPin, FileText, Video, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
-import apiClient from '@/utils/api';
+import { State, SupabaseArticle, SupabaseVideo, SupabaseCategory } from '@/integrations/supabase/types';
 
 const StatePage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [state, setState] = useState<any>(null);
-  const [articles, setArticles] = useState<any[]>([]);
-  const [videos, setVideos] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
+  const [state, setState] = useState<State | null>(null);
+  const [articles, setArticles] = useState<SupabaseArticle[]>([]);
+  const [videos, setVideos] = useState<SupabaseVideo[]>([]);
+  const [categories, setCategories] = useState<SupabaseCategory[]>([]);
+  const [states, setStates] = useState<State[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { language, t } = useLanguage();
@@ -34,48 +34,57 @@ const StatePage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all states for sidebar using API client
-        const statesResponse = await apiClient.getStates();
-        if (statesResponse.success) {
+        // Fetch all states for sidebar using Supabase client
+        const statesResponse = await supabase
+          .from('states')
+          .select('*');
+        if (statesResponse.data) {
           setStates(statesResponse.data);
         }
         
-        // Fetch all categories for header/sidebar using API client
-        const categoriesResponse = await apiClient.getCategories();
-        if (categoriesResponse.success) {
+        // Fetch all categories for header/sidebar using Supabase client
+        const categoriesResponse = await supabase
+          .from('categories')
+          .select('*');
+        if (categoriesResponse.data) {
           setCategories(categoriesResponse.data);
         }
 
-        // Fetch specific state using API client
-        const stateResponse = await apiClient.get(`/states/${slug}`);
-        if (!stateResponse.success || !stateResponse.data) {
-        setNotFound(true);
-        setLoading(false);
-        return;
-      }
-        setState(stateResponse.data);
+        // Fetch specific state using Supabase client
+        const stateResponse = await supabase
+          .from('states')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+        if (!stateResponse) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        setState(stateResponse);
         
-        // Fetch articles for this state using API client
-        const articlesResponse = await apiClient.getArticles({ 
-          state: stateResponse.data.slug 
-        });
-        if (articlesResponse.success) {
+        // Fetch articles for this state using Supabase client
+        const articlesResponse = await supabase
+          .from('articles')
+          .select('*')
+          .eq('state', stateResponse.id);
+        if (articlesResponse.data) {
           setArticles(articlesResponse.data);
         }
         
-        // Fetch videos for this state using API client
-        const videosResponse = await apiClient.getVideos();
-        if (videosResponse.success) {
-          const stateVideos = videosResponse.data.filter((video: any) => 
-            video.state_id === stateResponse.data.id
-          );
-          setVideos(stateVideos);
+        // Fetch videos for this state using Supabase client
+        const videosResponse = await supabase
+          .from('videos')
+          .select('*')
+          .eq('state_id', stateResponse.id);
+        if (videosResponse.data) {
+          setVideos(videosResponse.data);
         }
       } catch (error) {
         console.error('Error fetching state data:', error);
         setNotFound(true);
       } finally {
-      setLoading(false);
+        setLoading(false);
       }
     };
     fetchData();

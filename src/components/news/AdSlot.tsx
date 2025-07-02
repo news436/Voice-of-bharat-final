@@ -131,6 +131,7 @@ export const AdSlot = ({ slotNumber }: AdSlotProps) => {
             src={ad.image_url} 
             alt="Advertisement" 
             className={`${getImageClasses(slotNumber)}`}
+            loading="lazy"
           />
         </div>
       </div>

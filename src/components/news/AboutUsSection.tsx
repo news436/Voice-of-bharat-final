@@ -61,4 +61,6 @@ export const AboutUsSection = () => {
       </Card>
     </section>
   );
-}; 
+};
+
+export default AboutUsSection; 

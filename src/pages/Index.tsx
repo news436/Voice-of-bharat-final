@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,40 +9,78 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
 import { AdSlot } from '@/components/news/AdSlot';
 import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
-import { FeaturedArticles } from '@/components/news/FeaturedArticles';
-import { VideoSection } from '@/components/news/VideoSection';
-import { LiveStreamSection } from '@/components/news/LiveStreamSection';
-import apiClient from '@/utils/api';
 import WeatherReport from '@/components/news/WeatherReport';
 import StockWidget from '@/components/news/StockWidget';
-import { AboutUsSection } from '@/components/news/AboutUsSection';
-import { NewsletterSection } from '@/components/news/NewsletterSection';
 import { formatDistanceToNow } from 'date-fns';
+import { useArticleCache } from '@/contexts/ArticleCacheContext';
+
+const FeaturedArticles = lazy(() => import('@/components/news/FeaturedArticles'));
+const VideoSection = lazy(() => import('@/components/news/VideoSection'));
+const LiveStreamSection = lazy(() => import('@/components/news/LiveStreamSection'));
+const AboutUsSection = lazy(() => import('@/components/news/AboutUsSection'));
+const NewsletterSection = lazy(() => import('@/components/news/NewsletterSection'));
+const LatestNews = lazy(() => import('@/components/news/LatestNews'));
 
 const Index = () => {
-  const [recentArticles, setRecentArticles] = useState<any[]>([]);
-  const [featuredArticles, setFeaturedArticles] = useState<any[]>([]);
+  const { getArticle, setArticles } = useArticleCache();
+  const [allArticles, setAllArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [videos, setVideos] = useState<any[]>([]);
-  const [liveStreams, setLiveStreams] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const { language, t } = useLanguage();
   const { userProfile } = useAuth();
+  const [liveStreams, setLiveStreams] = useState<any[]>([]);
 
   const ARTICLES_PER_PAGE = 8;
+
+  // Load from localStorage cache first
+  useEffect(() => {
+    const cached = localStorage.getItem('latestNewsCache');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setAllArticles(parsed);
+        setArticles(parsed);
+        setLoading(false);
+      } catch {}
+    }
+    // Always fetch fresh data
+    const fetchAllArticles = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('articles')
+        .select('*')
+        .order('published_at', { ascending: false });
+      if (data) {
+        setArticles(data);
+        setAllArticles(data);
+        localStorage.setItem('latestNewsCache', JSON.stringify(data));
+      }
+      setLoading(false);
+    };
+    fetchAllArticles();
+  }, []);
+
+  // Filter for featured, breaking, latest, etc. from allArticles
+  const featuredArticles = allArticles.filter(a => a.is_featured);
+  const breakingArticles = allArticles.filter(a => a.is_breaking);
+  // Latest news is now ALL articles, not filtered
+  const latestArticles = allArticles;
 
   const fetchRecentArticles = async (pageNum: number) => {
     setIsFetchingMore(true);
     try {
-      const response = await apiClient.getArticles({
-        page: pageNum + 1,
-        limit: ARTICLES_PER_PAGE
-      });
+      const response = await supabase
+        .from('articles')
+        .select('*')
+        .order('published_at', { ascending: false })
+        .range(pageNum * ARTICLES_PER_PAGE, (pageNum + 1) * ARTICLES_PER_PAGE - 1);
 
-      if (response.success) {
-        setRecentArticles(prev => pageNum === 0 ? response.data : [...prev, ...response.data]);
+      if (response.data) {
+        setAllArticles(prev => pageNum === 0 ? response.data : [...prev, ...response.data]);
         if (response.data.length < ARTICLES_PER_PAGE) {
           setHasMore(false);
         }
@@ -62,24 +100,21 @@ const Index = () => {
     const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        // Fetch all articles to get featured ones
-        const allArticlesResponse = await apiClient.getArticles({ limit: 100 });
-        if (allArticlesResponse.success) {
-          const featured = allArticlesResponse.data.filter((a: any) => a.is_featured);
-          setFeaturedArticles(featured);
-          
-          fetchRecentArticles(0);
-        }
-
-        // Fetch videos using API client
-        const videosResponse = await apiClient.getVideos();
-        if (videosResponse.success) {
-          setVideos(videosResponse.data.slice(0, 4)); // Limit to 4 videos
+        // Fetch videos using Supabase
+        const videosResponse = await supabase
+          .from('videos')
+          .select('*')
+          .limit(4);
+        if (videosResponse.data) {
+          setVideos(videosResponse.data);
         }
         
-        // Fetch active live streams using API client
-        const streamsResponse = await apiClient.getActiveLiveStreams();
-        if (streamsResponse.success) {
+        // Fetch active live streams using Supabase
+        const streamsResponse = await supabase
+          .from('live_streams')
+          .select('*')
+          .eq('is_active', true);
+        if (streamsResponse.data) {
           setLiveStreams(streamsResponse.data);
         }
 
@@ -126,27 +161,37 @@ const Index = () => {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
           <div className="lg:col-span-3">
-        {featuredArticles.length > 0 && (
-          <>
-            <FeaturedArticles articles={featuredArticles} />
+            {loading ? (
+              <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />
+            ) : featuredArticles.length > 0 && (
+              <Suspense fallback={<div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+                <FeaturedArticles articles={featuredArticles} />
+              </Suspense>
+            )}
             <div className="my-6">
               <AdSlot slotNumber={4} />
             </div>
-            {liveStreams.length > 0 && (
-              <div className="my-6">
-                <LiveStreamSection streams={liveStreams} />
-              </div>
+            {loading ? (
+              <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />
+            ) : null
+            }
+            {loading ? (
+              <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />
+            ) : (
+              <>
+                {liveStreams.length > 0 && (
+                  <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+                    <LiveStreamSection streams={liveStreams} />
+                  </Suspense>
+                )}
+              </>
             )}
-          </>
-        )}
           </div>
           <div className="lg:col-span-1">
              <div className="grid grid-cols-1 gap-4">
                <div><WeatherReport /></div>
                <div><StockWidget /></div>
                <div><AdSlot slotNumber={1} /></div>
-               {/* Ad Slot 6 - Homepage sidebar */}
-               <div><AdSlot slotNumber={6} /></div>
              </div>
           </div>
         </div>
@@ -156,76 +201,42 @@ const Index = () => {
           <AdSlot slotNumber={5} />
         </div>
 
-              <section className="mb-12">
-          <h2 className="text-2xl font-bold text-black dark:text-white mb-6 border-b-2 border-red-600 pb-2 inline-block">
-                  {t('latest_news')}
-                </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
-                  {recentArticles.map((article) => {
-                    const title = language === 'hi' && article.title_hi ? article.title_hi : article.title;
-                    return (
-                      <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-xl">
-                        <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
-                          {article.featured_image_url && (
-                            <img
-                              src={article.featured_image_url}
-                              alt={title}
-                              className="w-full h-28 md:h-40 lg:h-48 object-cover"
-                            />
-                          )}
-                          <div className="p-3 flex-1 flex flex-col">
-                            <h3 className="font-bold text-sm mb-1 line-clamp-2 text-black dark:text-white">
-                              {title}
-                            </h3>
-                            <div className="flex items-center text-xs text-gray-500 mt-auto whitespace-nowrap overflow-hidden text-ellipsis">
-                              <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                              <span>{new Date(article.published_at).toLocaleDateString()}</span>
-                              <span className="mx-1">·</span>
-                              <span>{formatShortTimeAgo(article.published_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-          {isFetchingMore && (
-            <div className="text-center mt-8">
-               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-            </div>
+        {/* Latest News - full width section below the grid and above videos */}
+        <div className="mb-12">
+          <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+            <LatestNews articles={latestArticles} />
+          </Suspense>
+          {latestArticles.length === 0 && (
+            <div className="text-center text-gray-500 my-8">No news articles available.</div>
           )}
-          {hasMore && !isFetchingMore && (
-            <div className="text-center mt-8">
-              <Button
-                onClick={handleShowMore}
-                variant="outline"
-                className="bg-red-600 text-white hover:bg-red-700 hover:text-white"
-              >
-                {t('view_more')}
-              </Button>
-            </div>
-          )}
-              </section>
-
-        <div className="my-6">
-          <AdSlot slotNumber={3} />
         </div>
 
         {videos.length > 0 && (
-          <VideoSection videos={videos} />
+          <Suspense fallback={<div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+            <VideoSection videos={videos} />
+          </Suspense>
         )}
         
-        {/* Ad Slot 7 - Above About Us section */}
+        <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+          <AboutUsSection />
+        </Suspense>
+        {/* Ad Slot 7 - Below About Us section */}
         <div className="my-6">
           <AdSlot slotNumber={7} />
         </div>
-        
-        <AboutUsSection />
-        <NewsletterSection />
+        <Suspense fallback={<div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />}>
+          <NewsletterSection />
+        </Suspense>
+
+        {/* Ad Slot 3 - Homepage bottom banner */}
+        <div className="my-6">
+          <AdSlot slotNumber={3} />
+        </div>
       </main>
     </div>
   );
 };
 
 export default Index;
+
 

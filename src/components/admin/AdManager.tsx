@@ -105,10 +105,12 @@ export const AdManager = () => {
         ad_type: ad.ad_type || 'html',
     };
     
-    const { error } = await supabase.from('ads').upsert(upsertData, { onConflict: 'slot_number' });
+    console.log('Ad upsertData:', upsertData);
+    const { error } = await supabase.from('ads').upsert([upsertData], { onConflict: 'slot_number' });
     
     if (error) {
-      toast({ title: 'Error', description: `Failed to save Ad Slot ${slot}.`, variant: 'destructive' });
+      console.error('Supabase upsert error:', error);
+      toast({ title: 'Error', description: `Failed to save Ad Slot ${slot}. ${error.message || ''}`, variant: 'destructive' });
     } else {
       toast({ title: 'Saved', description: `Ad Slot ${slot} has been updated.` });
         // Clear the file and preview after successful save
@@ -300,7 +302,7 @@ export const AdManager = () => {
                         <div className="w-full border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden mx-auto" style={{ height: `${getSlotDimensions(slot).height}px` }}>
                           {ads[slot]?.enabled ? (
                             ads[slot]?.ad_type === 'image' && (ads[slot]?.image_url || ads[slot]?.imagePreview) ? (
-                              <img src={ads[slot]?.imagePreview || ads[slot]?.image_url} alt="Ad preview" className="w-full h-full object-cover" />
+                              <img src={ads[slot]?.imagePreview || ads[slot]?.image_url} alt="Ad preview" className="w-full h-full object-cover" loading="lazy" />
                             ) : ads[slot]?.ad_type === 'html' && ads[slot]?.html_code ? (
                               <iframe title="Desktop Preview" srcDoc={ads[slot].html_code} sandbox="allow-scripts allow-same-origin" className="w-full h-full border-0" />
                             ) : <p className="text-xs text-muted-foreground p-4 text-center">No content for preview</p>
@@ -323,6 +325,7 @@ export const AdManager = () => {
                                   alt="Ad preview" 
                                   className="w-full h-full object-contain"
                                   style={{ maxWidth: '100%', maxHeight: '100%' }}
+                                  loading="lazy"
                                 />
                               </div>
                             ) : ads[slot]?.ad_type === 'html' && ads[slot]?.html_code ? (

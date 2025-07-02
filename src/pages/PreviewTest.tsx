@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import apiClient from '@/utils/api';
 import { generatePreviewUrl } from '@/utils/urlShortener';
+import { supabase } from '@/integrations/supabase/client';
 
 const PreviewTest = () => {
   const [articles, setArticles] = useState<any[]>([]);
@@ -19,8 +19,8 @@ const PreviewTest = () => {
 
   const fetchArticles = async () => {
     try {
-      const response = await apiClient.getArticles({ limit: 10 });
-      if (response.success) {
+      const response = await supabase.from('articles').select('*').limit(10);
+      if (response.data) {
         setArticles(response.data);
       }
     } catch (error) {

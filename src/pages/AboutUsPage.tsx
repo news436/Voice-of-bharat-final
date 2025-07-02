@@ -4,6 +4,16 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Users, Target, Eye } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+function getOptimizedCloudinaryUrl(url: string) {
+  if (!url) return url;
+  // Only optimize if it's a Cloudinary URL and not already transformed
+  if (url.includes('res.cloudinary.com') && !url.includes('f_auto')) {
+    // Insert transformation after /upload/
+    return url.replace('/upload/', '/upload/f_auto,q_auto/');
+  }
+  return url;
+}
+
 const AboutUsPage = () => {
   const [content, setContent] = useState({
     detailedContent: '',
@@ -95,7 +105,7 @@ const AboutUsPage = () => {
       <div className="relative h-[60vh] md:h-[80vh] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${content.heroImageUrl})` }}
+          style={{ backgroundImage: `url(${getOptimizedCloudinaryUrl(content.heroImageUrl)})` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         <div className="relative h-full flex flex-col justify-end items-center text-center text-white pb-16 md:pb-24 px-4">
@@ -158,7 +168,7 @@ const AboutUsPage = () => {
               </div>
             </div>
             <div className="w-full h-80 md:h-full bg-gray-200 dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
-                <img src={content.teamImageUrl} alt={t('about.team_image_alt')} className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" />
+                <img src={getOptimizedCloudinaryUrl(content.teamImageUrl)} alt={t('about.team_image_alt')} className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" loading="lazy" />
             </div>
           </div>
         </AnimatedSection>
@@ -175,7 +185,7 @@ const AboutUsPage = () => {
                 <div className="flex flex-col items-center text-center p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg mb-12 mx-auto max-w-xs">
                   <div className="w-36 h-36 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 overflow-hidden">
                     {owner.image_url ? (
-                      <img src={owner.image_url} alt={owner.name} className="w-full h-full object-cover" />
+                      <img src={owner.image_url} alt={owner.name} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <Users className="w-full h-full text-gray-400 dark:text-gray-500 p-6" />
                     )}
@@ -197,7 +207,7 @@ const AboutUsPage = () => {
                     <div key={member.id} className="flex flex-col items-center text-center p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                       <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 mb-4 overflow-hidden">
                         {member.image_url ? (
-                          <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" />
+                          <img src={member.image_url} alt={member.name} className="w-full h-full object-cover" loading="lazy" />
                         ) : (
                           <Users className="w-full h-full text-gray-400 dark:text-gray-500 p-6" />
                         )}

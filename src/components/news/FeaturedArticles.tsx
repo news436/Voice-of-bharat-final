@@ -3,19 +3,26 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CricketScoreWidget } from './CricketScoreWidget';
+import { supabase } from '@/integrations/supabase/client';
 
-
-interface FeaturedArticlesProps {
-  articles: any[];
-}
-export const FeaturedArticles = ({ articles }: FeaturedArticlesProps) => {
+export const FeaturedArticles = () => {
   const { language, t } = useLanguage();
+  const [articles, setArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  if (articles.length === 0) return null;
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      setLoading(true);
+      const { data } = await supabase.from('articles').select('*').eq('is_featured', true).order('published_at', { ascending: false });
+      setArticles(data || []);
+      setLoading(false);
+    };
+    fetchFeatured();
+  }, []);
 
   const resetInterval = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -24,7 +31,6 @@ export const FeaturedArticles = ({ articles }: FeaturedArticlesProps) => {
     }, 2000);
   };
 
-  // Auto-slide effect
   useEffect(() => {
     if (articles.length <= 1) return;
     resetInterval();
@@ -32,6 +38,11 @@ export const FeaturedArticles = ({ articles }: FeaturedArticlesProps) => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [articles.length]);
+
+  if (loading) {
+    return <div className="h-40 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />;
+  }
+  if (articles.length === 0) return null;
 
   const handlePrev = () => {
     setCurrent((prev) => (prev - 1 + articles.length) % articles.length);
@@ -123,3 +134,5 @@ export const FeaturedArticles = ({ articles }: FeaturedArticlesProps) => {
     </section>
   );
 };
+
+export default FeaturedArticles;

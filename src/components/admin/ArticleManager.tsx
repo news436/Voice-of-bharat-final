@@ -14,7 +14,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { isValidYoutubeUrl, getYoutubeEmbedUrl } from '@/lib/youtube-utils';
-import apiClient from '@/utils/api';
+import { isValidFacebookUrl, getFacebookEmbedUrl } from '@/lib/facebook-utils';
 
 const ReactQuill = lazy(() =>
   import('react-quill').then(module => {
@@ -49,6 +49,7 @@ type ArticleFormData = {
   content_hi: string;
   featured_image_url: string;
   youtube_video_url: string;
+  facebook_video_url: string;
   status: 'draft' | 'published' | 'archived';
   is_breaking: boolean;
   is_featured: boolean;
@@ -69,13 +70,14 @@ export const ArticleManager = () => {
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
-    featured_image_url: '', youtube_video_url: '', status: 'draft', is_breaking: false, is_featured: false,
+    featured_image_url: '', youtube_video_url: '', facebook_video_url: '', status: 'draft', is_breaking: false, is_featured: false,
     category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
     publisher_name: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { language } = useLanguage();
 
@@ -86,25 +88,25 @@ export const ArticleManager = () => {
   const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      // Fetch articles using API client
-      const articlesResponse = await apiClient.getArticles({ limit: 100 });
-      if (articlesResponse.success) {
+      // Fetch articles with author and category info
+      const articlesResponse = await supabase.from('articles').select(`*, profiles:author_id (full_name, email, role), categories:category_id (name, slug)`);
+      if (articlesResponse.data) {
         setArticles(articlesResponse.data);
       }
 
-      // Fetch categories using API client
-      const categoriesResponse = await apiClient.getCategories();
-      if (categoriesResponse.success) {
+      // Fetch categories using Supabase client
+      const categoriesResponse = await supabase.from('categories').select('*');
+      if (categoriesResponse.data) {
         setCategories(categoriesResponse.data);
       }
 
-      // Fetch states using API client
-      const statesResponse = await apiClient.getStates();
-      if (statesResponse.success) {
+      // Fetch states using Supabase client
+      const statesResponse = await supabase.from('states').select('*');
+      if (statesResponse.data) {
         setStates(statesResponse.data);
       }
     } catch (error: any) {
-      toast({ title: "Error fetching data", description: error.message, variant: "destructive" });
+      toast({ title: "Error fetching data", description: error?.message || String(error), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +114,7 @@ export const ArticleManager = () => {
   
   const generateSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
 
-  const uploadImage = async (file: File) => {
+  const uploadImageToCloudinary = async (file: File) => {
     const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
   
@@ -139,7 +141,7 @@ export const ArticleManager = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated.");
@@ -147,11 +149,13 @@ export const ArticleManager = () => {
       let finalImageUrl = formData.featured_image_url;
       if (imageFile) {
         toast({ title: "Uploading image...", description: "Please wait a moment." });
-        finalImageUrl = await uploadImage(imageFile);
+        finalImageUrl = await uploadImageToCloudinary(imageFile);
       }
 
+      const publisherName = formData.publisher_name?.trim() || user.user_metadata?.full_name || user.email || 'Unknown Author';
       const articleData = {
         ...formData,
+        publisher_name: publisherName,
         featured_image_url: finalImageUrl,
         slug: formData.slug || generateSlug(formData.title),
         author_id: user.id,
@@ -165,24 +169,24 @@ export const ArticleManager = () => {
       };
 
       if (editingArticle) {
-        const response = await apiClient.updateArticle(editingArticle.id, articleData);
-        if (response.success) {
-          toast({ title: "Success", description: "Article updated." });
-        } else {
-          throw new Error(response.error || 'Failed to update article');
+        const response = await supabase.from('articles').update(articleData).eq('id', editingArticle.id);
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to update article');
         }
+        toast({ title: "Success", description: "Article updated." });
       } else {
-        const response = await apiClient.createArticle(articleData);
-        if (response.success) {
-          toast({ title: "Success", description: "Article created." });
-        } else {
-          throw new Error(response.error || 'Failed to create article');
+        const response = await supabase.from('articles').insert(articleData);
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to create article');
         }
+        toast({ title: "Success", description: "Article created." });
       }
+      await fetchInitialData();
       resetForm();
-      fetchInitialData();
     } catch (error: any) {
-      toast({ title: "Error submitting article", description: error.message, variant: "destructive" });
+      toast({ title: "Error submitting article", description: error?.message || String(error), variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -199,6 +203,7 @@ export const ArticleManager = () => {
       meta_keywords: article.meta_keywords || '',
       publisher_name: article.publisher_name || article.profiles?.full_name || '',
       youtube_video_url: article.youtube_video_url || '',
+      facebook_video_url: article.facebook_video_url || '',
     });
     setShowForm(true);
     setImageFile(null);
@@ -208,22 +213,21 @@ export const ArticleManager = () => {
   const handleDelete = async (articleId: string) => {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) return;
     try {
-      const response = await apiClient.deleteArticle(articleId);
-      if (response.success) {
-        toast({ title: "Success", description: "Article deleted." });
-        fetchInitialData();
-      } else {
-        throw new Error(response.error || 'Failed to delete article');
+      const response = await supabase.from('articles').delete().eq('id', articleId);
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete article');
       }
+      toast({ title: "Success", description: "Article deleted." });
+      fetchInitialData();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error?.message || String(error), variant: "destructive" });
     }
     setEditingArticle(null);
     setFormData({
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: '', youtube_video_url: '',
+      publisher_name: '', youtube_video_url: '', facebook_video_url: '',
     });
     setImageFile(null);
     setImagePreview(null);
@@ -236,19 +240,44 @@ export const ArticleManager = () => {
       title: '', title_hi: '', slug: '', summary: '', summary_hi: '', content: '', content_hi: '',
       featured_image_url: '', status: 'draft', is_breaking: false, is_featured: false,
       category_id: '', state_id: '', meta_title: '', meta_description: '', meta_keywords: '',
-      publisher_name: '', youtube_video_url: '',
+      publisher_name: '', youtube_video_url: '', facebook_video_url: '',
     });
   };
 
   const quillModules = useMemo(() => ({
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-      ['link', 'image'],
-      [{ 'lineheight': ['1', '1.5', '2', '2.5', '3'] }],
-      ['clean']
-    ],
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+        ['link', 'image'],
+        [{ 'lineheight': ['1', '1.5', '2', '2.5', '3'] }],
+        ['clean']
+      ],
+      handlers: {
+        image: async function () {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+          input.onchange = async () => {
+            if (input.files && input.files[0]) {
+              const file = input.files[0];
+              try {
+                toast({ title: "Uploading image...", description: "Please wait a moment." });
+                const url = await uploadImageToCloudinary(file);
+                const quill = this.quill;
+                const range = quill.getSelection();
+                quill.insertEmbed(range ? range.index : 0, 'image', url);
+                toast({ title: "Image uploaded", description: "Image inserted into content." });
+              } catch (error: any) {
+                toast({ title: "Image upload failed", description: error.message, variant: "destructive" });
+              }
+            }
+          };
+        }
+      }
+    }
   }), []);
 
   useEffect(() => {
@@ -280,9 +309,9 @@ export const ArticleManager = () => {
             </h2>
             <div className="flex items-center gap-4">
               <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
-              <Button type="submit" className="gap-1">
+              <Button type="submit" className="gap-1" disabled={isSubmitting}>
                 <Save className="h-4 w-4" />
-                {editingArticle ? 'Save Changes' : 'Publish Article'}
+                {editingArticle ? 'Save Changes' : isSubmitting ? 'Publishing...' : 'Publish Article'}
               </Button>
             </div>
           </header>
@@ -428,7 +457,7 @@ export const ArticleManager = () => {
                         <Label htmlFor="featured_image">Featured Image</Label>
                         {imagePreview && (
                           <div className="w-full">
-                            <img src={imagePreview} alt="Article preview" className="rounded-lg w-full h-auto object-cover shadow-md" />
+                            <img src={imagePreview} alt="Article preview" className="rounded-lg w-full h-auto object-cover shadow-md" loading="lazy" />
                           </div>
                         )}
                         <Input 
@@ -456,7 +485,6 @@ export const ArticleManager = () => {
                           onChange={e => setFormData({...formData, youtube_video_url: e.target.value})} 
                         />
                         <p className="text-xs text-muted-foreground">Optional: Add a YouTube video URL to embed in the article. The video will be displayed within the article content.</p>
-                        
                         {/* YouTube Video Preview */}
                         {formData.youtube_video_url && isValidYoutubeUrl(formData.youtube_video_url) && (
                           <div className="mt-4">
@@ -473,10 +501,41 @@ export const ArticleManager = () => {
                             </div>
                           </div>
                         )}
-                        
                         {formData.youtube_video_url && !isValidYoutubeUrl(formData.youtube_video_url) && (
                           <div className="mt-2">
                             <p className="text-xs text-red-600 dark:text-red-400">⚠ Invalid YouTube URL format</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="facebook_video_url">Facebook Video URL</Label>
+                        <Input 
+                          id="facebook_video_url"
+                          type="url" 
+                          placeholder="https://www.facebook.com/watch?v=..." 
+                          value={formData.facebook_video_url} 
+                          onChange={e => setFormData({...formData, facebook_video_url: e.target.value})} 
+                        />
+                        <p className="text-xs text-muted-foreground">Optional: Add a Facebook video URL to embed in the article. The video will be displayed within the article content.</p>
+                        {/* Facebook Video Preview */}
+                        {formData.facebook_video_url && isValidFacebookUrl(formData.facebook_video_url) && (
+                          <div className="mt-4">
+                            <p className="text-xs text-green-600 dark:text-green-400 mb-2">✓ Valid Facebook URL - Preview:</p>
+                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                              <iframe
+                                src={getFacebookEmbedUrl(formData.facebook_video_url) || ''}
+                                title="Facebook video preview"
+                                className="absolute top-0 left-0 w-full h-full rounded-lg border"
+                                frameBorder="0"
+                                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                allowFullScreen
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {formData.facebook_video_url && !isValidFacebookUrl(formData.facebook_video_url) && (
+                          <div className="mt-2">
+                            <p className="text-xs text-red-600 dark:text-red-400">⚠ Invalid Facebook URL format</p>
                           </div>
                         )}
                       </div>

@@ -157,7 +157,7 @@ export const CricketScoreWidget = () => {
   return (
     <div className="bg-white dark:bg-black rounded-2xl shadow-lg p-4 w-full max-w-md mx-auto">
       <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <img src="https://www.cricbuzz.com/images/cb_logo.svg" alt="ICC" className="h-6 w-6" />
+        <img src="https://www.cricbuzz.com/images/cb_logo.svg" alt="ICC" className="h-6 w-6" loading="lazy" />
         Cricket International Matches
       </h3>
       {loading && <div className="text-center py-8 text-gray-500">Loading...</div>}

@@ -144,49 +144,57 @@ const LiveStreamPage = () => {
   const embedUrl = getEmbedUrl(stream.stream_url);
 
   return (
-    <div className="bg-gray-50 dark:bg-black/90">
-      <main className="container mx-auto px-4 py-8">
+    <div className="bg-gradient-to-br from-gray-50 to-gray-200 dark:from-black dark:to-gray-900 min-h-screen">
+      <main className="container mx-auto px-2 sm:px-6 py-8">
         {/* Ad Slot 5 - Live stream pages top banner */}
         <div className="mb-6">
           <AdSlot slotNumber={5} />
         </div>
-        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden rounded-3xl shadow-2xl border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
               <CardContent className="p-0">
-                <AspectRatio ratio={16 / 9}>
-                  {embedUrl ? (
-                    <iframe
-                      src={embedUrl}
-                      title={title}
-                      className="w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      frameBorder="0"
-                    ></iframe>
-                  ) : (
-                    <div className="w-full h-full bg-black flex items-center justify-center">
-                      <p className="text-white">{t('live.invalid_url')}</p>
+                <div className="relative">
+                  <AspectRatio ratio={16 / 9}>
+                    {embedUrl ? (
+                      <iframe
+                        src={embedUrl}
+                        title={title}
+                        className="w-full h-full rounded-t-3xl"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        frameBorder="0"
+                      ></iframe>
+                    ) : (
+                      <div className="w-full h-full bg-black flex items-center justify-center rounded-t-3xl">
+                        <p className="text-white text-lg">{t('live.invalid_url')}</p>
+                      </div>
+                    )}
+                    {/* Animated LIVE badge */}
+                    <div className="absolute top-4 left-4 z-10">
+                      <Badge className="bg-red-600 text-white animate-pulse px-4 py-2 text-lg font-bold shadow-lg rounded-full">
+                        <Radio className="h-4 w-4 mr-2 animate-pulse" /> LIVE
+                      </Badge>
                     </div>
-                  )}
-                </AspectRatio>
-                <div className="p-6">
-                  <Badge className="bg-red-600 text-white animate-pulse mb-4">
-                    <Radio className="h-4 w-4 mr-2" /> {t('live.badge')}
-                  </Badge>
-                  <h1 className="text-3xl font-bold mb-4">{title}</h1>
-                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{t('live.started_at')} {new Date(stream.created_at).toLocaleString()}</span>
+                  </AspectRatio>
+                </div>
+                {/* Info section with glassmorphic/gradient background */}
+                <div className="p-8 bg-gradient-to-r from-white/80 via-red-50/80 to-white/80 dark:from-gray-900/80 dark:via-red-900/40 dark:to-gray-900/80 backdrop-blur-md rounded-b-3xl">
+                  <h1 className="text-3xl md:text-4xl font-extrabold mb-3 text-black dark:text-white flex items-center gap-3">
+                    <span className="inline-block w-2 h-8 bg-red-600 rounded-full" />
+                    {title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-4 text-base text-gray-700 dark:text-gray-300 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      <span>{t('live.started_at')} {new Date(stream.created_at).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ExternalLink className="h-5 w-5" />
+                      <span>{stream.stream_url?.includes('youtube') ? 'YouTube' : stream.stream_url?.includes('facebook') ? 'Facebook' : 'Live'}</span>
+                    </div>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{description}</p>
-                  <a href={stream.stream_url} target="_blank" rel="noopener noreferrer">
-                    <Button className="mt-6 w-full md:w-auto">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      {t('live.watch_on_platform')}
-                    </Button>
-                  </a>
+                  <p className="text-lg text-gray-700 dark:text-gray-200 whitespace-pre-wrap mb-2">{description}</p>
                 </div>
               </CardContent>
             </Card>
@@ -196,7 +204,6 @@ const LiveStreamPage = () => {
             <div>
               <AdSlot slotNumber={6} />
             </div>
-            
             <RelatedContent 
               title={t('live.related_streams')} 
               items={relatedStreams} 
@@ -205,7 +212,6 @@ const LiveStreamPage = () => {
             />
           </div>
         </div>
-        
         {/* Ad Slot 7 - Live stream pages bottom banner */}
         <div className="mt-8">
           <AdSlot slotNumber={7} />

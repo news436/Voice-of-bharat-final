@@ -6,15 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, FileText, Video, AlertCircle, Tag } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
-import apiClient from '@/utils/api';
+import { SupabaseCategory, SupabaseArticle } from '@/integrations/supabase/types';
+import { useArticleCache } from '@/contexts/ArticleCacheContext';
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [category, setCategory] = useState<any>(null);
-  const [articles, setArticles] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [category, setCategory] = useState<SupabaseCategory | null>(null);
+  const [articles, setArticles] = useState<SupabaseArticle[]>([]);
+  const [categories, setCategories] = useState<SupabaseCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
+  const { getArticle, setArticle: setArticleCache } = useArticleCache();
 
   function formatShortTimeAgo(dateString: string) {
     const now = new Date();
@@ -32,26 +34,36 @@ const CategoryPage = () => {
       setLoading(true);
       
       try {
-        // Fetch all categories for sidebar using API client
-        const categoriesResponse = await apiClient.getCategories();
-        if (categoriesResponse.success) {
+        // Fetch all categories for sidebar using Supabase client
+        const categoriesResponse = await supabase
+          .from('categories')
+          .select('*');
+        if (categoriesResponse.data) {
           setCategories(categoriesResponse.data);
         }
 
-        // Fetch category using API client
-        const categoryResponse = await apiClient.get(`/categories/${slug}`);
-        if (!categoryResponse.success || !categoryResponse.data) {
+        // Fetch category using Supabase client
+        const categoryResponse = await supabase
+          .from('categories')
+          .select('*')
+          .eq('slug', slug);
+        if (!categoryResponse.data || categoryResponse.data.length === 0) {
           setLoading(false);
           return;
         }
-        setCategory(categoryResponse.data);
+        setCategory(categoryResponse.data[0]);
         
-        // Fetch articles for this category using API client
-        const articlesResponse = await apiClient.getArticles({ 
-          category: categoryResponse.data.slug 
-        });
-        if (articlesResponse.success) {
-          setArticles(articlesResponse.data);
+        // Try to get articles for this category from cache
+        // We'll use the cache if all articles for this category are present
+        let cachedArticles = [];
+        const articlesResponse = await supabase
+          .from('articles')
+          .select('*')
+          .eq('category_id', categoryResponse.data[0].id);
+        if (articlesResponse.data) {
+          // Store all in cache
+          articlesResponse.data.forEach(a => setArticleCache(a));
+          setArticles(articlesResponse.data as SupabaseArticle[]);
         }
       } catch (error) {
         console.error('Error fetching category data:', error);

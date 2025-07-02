@@ -69,6 +69,11 @@ export type Database = {
           title: string
           updated_at: string
           youtube_video_url: string | null
+          facebook_video_url?: string | null
+          publisher_name?: string
+          title_hi?: string
+          summary_hi?: string
+          content_hi?: string
         }
         Insert: {
           author_id: string

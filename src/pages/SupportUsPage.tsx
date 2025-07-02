@@ -107,7 +107,7 @@ const SupportUsPage = () => {
                 </h2>
                 <div className="flex justify-center mb-4">
                   <div className="p-4 bg-white rounded-lg border-4 border-red-600">
-                    <img src={supportDetails.qr_code_image_url} alt="QR Code for payment" className="w-48 h-48 md:w-56 md:h-56" />
+                    <img src={supportDetails.qr_code_image_url} alt="QR Code for payment" className="w-48 h-48 md:w-56 md:h-56" loading="lazy" />
                   </div>
                 </div>
                  <div className="flex flex-col items-center gap-2 mt-2">

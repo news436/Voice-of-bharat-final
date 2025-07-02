@@ -1,59 +1,55 @@
 // URL Shortening Utility
 // This generates short URLs similar to popular news sites (e.g., https://voiceofbharat.live/abc123)
 
-import apiClient from './api';
-
-const SHORT_URL_BASE = import.meta.env.VITE_SHORT_URL_BASE || 'https://voiceofbharat.live';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://voice-of-bharat-api.onrender.com';
-
-interface ShortUrlResponse {
-  success: boolean;
-  data?: {
-    short_id: string;
-    short_url: string;
-    article_id: string;
-  };
-  error?: string;
-  message?: string;
-}
+import { supabase } from '@/integrations/supabase/client';
 
 // Create a short URL for an article using the backend API
 export async function createShortUrl(articleId: string): Promise<string> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/redirect/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ article_id: articleId }),
-    });
-
-    const data: ShortUrlResponse = await response.json();
-
-    if (data.success && data.data) {
-      return data.data.short_url;
-    } else {
-      console.error('Failed to create short URL:', data.error);
-      // Fallback to full URL if short URL creation fails
-      return `${window.location.origin}/article/id/${articleId}`;
-    }
-  } catch (error) {
-    console.error('Error creating short URL:', error);
-    // Fallback to full URL if API call fails
-    return `${window.location.origin}/article/id/${articleId}`;
-  }
+  // TODO: Implement this function
+  throw new Error('Function not implemented');
 }
 
 // Get short URL for an article (creates if doesn't exist)
 export async function getShortUrl(articleId: string): Promise<string> {
-  try {
-    // Try to create/get short URL
-    return await createShortUrl(articleId);
-  } catch (error) {
-    console.error('Error getting short URL:', error);
-    // Fallback to full URL
-    return `${window.location.origin}/article/id/${articleId}`;
+  if (!articleId) throw new Error('Invalid articleId for short URL');
+  // 1. Try to fetch existing short URL
+  const { data, error } = await (supabase as any)
+    .from('url_shortener')
+    .select('short_id')
+    .eq('article_id', articleId)
+    .single();
+
+  if (data && data.short_id) {
+    return `https://voiceofbharat.live/${data.short_id}`;
   }
+
+  // 2. If not found, generate a unique short_id
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let shortId = '';
+  let isUnique = false;
+  for (let attempt = 0; attempt < 10 && !isUnique; attempt++) {
+    shortId = '';
+    for (let i = 0; i < 6; i++) {
+      shortId += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    // Check uniqueness
+    const { data: existing } = await (supabase as any)
+      .from('url_shortener')
+      .select('id')
+      .eq('short_id', shortId)
+      .single();
+    if (!existing) isUnique = true;
+  }
+  if (!isUnique) throw new Error('Failed to generate unique short URL');
+
+  // 3. Insert new short URL
+  const { data: insertData, error: insertError } = await (supabase as any)
+    .from('url_shortener')
+    .insert({ short_id: shortId, article_id: articleId })
+    .select('short_id')
+    .single();
+  if (insertError || !insertData) throw new Error('Failed to create short URL');
+  return `https://voiceofbharat.live/${insertData.short_id}`;
 }
 
 // Mobile-friendly clipboard copy utility
@@ -143,13 +139,8 @@ export async function shareToWhatsApp(articleTitle: string, shortUrl: string): P
 
 // Get analytics for a short URL
 export async function getShortUrlAnalytics(shortId: string): Promise<any> {
-  try {
-    const response = await apiClient.get(`/url-shortener/${shortId}/analytics`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching short URL analytics:', error);
-    throw error;
-  }
+  // TODO: Implement this function
+  throw new Error('Function not implemented');
 }
 
 // Test WhatsApp link preview
@@ -186,7 +177,7 @@ export function testWhatsAppPreview(articleTitle: string, shortUrl: string, imag
 
 // Generate preview URL for social media sharing
 export function generatePreviewUrl(articleId: string): string {
-  // Always use the custom subdomain for previews
+  // Use the Render URL for previews until DNS is ready
   const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
   return `${PREVIEW_BASE_URL}/articles/preview/${articleId}`;
 }
@@ -263,7 +254,7 @@ export function generateShortPreviewUrl(articleId: string): string {
 
 // Generate even shorter preview URL (if you want to use just the first part of the ID)
 export function generateMinimalPreviewUrl(articleId: string): string {
-  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
+  const PREVIEW_BASE_URL = 'https://voiceofbharat.live';
   // Use just the first 8 characters of the article ID
   const shortId = articleId.substring(0, 8);
   return `${PREVIEW_BASE_URL}/articles/p/${shortId}`;

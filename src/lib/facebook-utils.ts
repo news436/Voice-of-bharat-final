@@ -47,15 +47,28 @@ export function getFacebookEmbedUrl(url: string): string | null {
  */
 export function isValidFacebookUrl(url: string): boolean {
   if (!url) return false;
-  
-  const facebookPatterns = [
-    /facebook\.com\/watch\?v=/,
-    /facebook\.com\/[^\/]+\/videos\//,
-    /fb\.watch\//,
-    /facebook\.com\/share\/v\//
-  ];
-  
-  return facebookPatterns.some(pattern => pattern.test(url));
+  // Accept any facebook.com or fb.watch URL that contains a video identifier
+  try {
+    const u = new URL(url);
+    if (
+      u.hostname.includes('facebook.com') ||
+      u.hostname === 'fb.watch'
+    ) {
+      // Accept if path or search contains any of these video patterns
+      const patterns = [
+        '/videos/',
+        '/watch',
+        '/share/v/',
+        '/reel/',
+        '/story.php',
+        '/video.php'
+      ];
+      return patterns.some(p => u.pathname.includes(p) || (u.search && u.search.includes(p)));
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**

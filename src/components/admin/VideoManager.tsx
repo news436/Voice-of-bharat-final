@@ -258,7 +258,7 @@ export const VideoManager = () => {
             {videos.map((video) => (
               <TableRow key={video.id}>
                 <TableCell className="hidden sm:table-cell">
-                  <img alt={video.title} className="aspect-square rounded-md object-cover" height="64" src={video.thumbnail_url || '/placeholder.svg'} width="64" />
+                  <img alt={video.title} className="aspect-square rounded-md object-cover" height="64" src={video.thumbnail_url || '/placeholder.svg'} width="64" loading="lazy" />
                 </TableCell>
                 <TableCell className="font-medium">{video.title}</TableCell>
                 <TableCell>{video.video_type}</TableCell>
@@ -379,7 +379,7 @@ export const VideoManager = () => {
                    
                    {imagePreview && (
                      <div className="mt-2">
-                       <img src={imagePreview} alt="Thumbnail preview" className="rounded-md object-cover max-w-[200px] max-h-[150px]" />
+                       <img src={imagePreview} alt="Thumbnail preview" className="rounded-md object-cover max-w-[200px] max-h-[150px]" loading="lazy" />
                      </div>
                    )}
                    

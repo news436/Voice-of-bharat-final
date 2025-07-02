@@ -112,4 +112,6 @@ export const NewsletterSection = () => {
       </Card>
     </section>
   );
-}; 
+};
+
+export default NewsletterSection; 

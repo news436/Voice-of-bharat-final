@@ -289,7 +289,7 @@ export const AboutUsManager = () => {
                   />
                   {heroImagePreview && (
                     <div className="mt-4">
-                      <img src={heroImagePreview} alt="Hero image preview" className="rounded-md object-cover w-32 h-20" />
+                      <img src={heroImagePreview} alt="Hero image preview" className="rounded-md object-cover w-32 h-20" loading="lazy" />
                     </div>
                   )}
                   <p className="mt-2 text-xs text-muted-foreground">This will be shown on the about us page header.</p>
@@ -307,7 +307,7 @@ export const AboutUsManager = () => {
                   />
                   {teamImagePreview && (
                     <div className="mt-4">
-                      <img src={teamImagePreview} alt="Team image preview" className="rounded-md object-cover w-32 h-20" />
+                      <img src={teamImagePreview} alt="Team image preview" className="rounded-md object-cover w-32 h-20" loading="lazy" />
                     </div>
                   )}
                   <p className="mt-2 text-xs text-muted-foreground">This will be shown in the about us content.</p>
@@ -375,7 +375,7 @@ export const AboutUsManager = () => {
               <div key={idx} className="flex flex-col md:flex-row items-center gap-4 border-b pb-4 mb-4">
                 <div className="flex-shrink-0">
                   {member.image_url ? (
-                    <img src={member.image_url} alt="Team member" className="w-20 h-20 rounded-full object-cover border" />
+                    <img src={member.image_url} alt="Team member" className="w-20 h-20 rounded-full object-cover border" loading="lazy" />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">No Image</div>
                   )}

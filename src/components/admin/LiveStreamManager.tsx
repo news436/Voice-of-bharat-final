@@ -172,7 +172,7 @@ export const LiveStreamManager = () => {
             {streams.map((stream) => (
               <TableRow key={stream.id}>
                 <TableCell className="hidden sm:table-cell">
-                  <img alt={stream.title} className="aspect-square rounded-md object-cover" height="64" src={stream.thumbnail_url || '/placeholder.svg'} width="64" />
+                  <img alt={stream.title} className="aspect-square rounded-md object-cover" height="64" src={stream.thumbnail_url || '/placeholder.svg'} width="64" loading="lazy" />
                 </TableCell>
                 <TableCell className="font-medium">{stream.title}</TableCell>
                 <TableCell>
@@ -222,7 +222,7 @@ export const LiveStreamManager = () => {
                 <Input id="thumbnail" type="file" accept="image/*" onChange={handleImageChange} className="mt-1"/>
                 {imagePreview && (
                   <div className="mt-4">
-                    <img src={imagePreview} alt="Thumbnail preview" className="rounded-md object-cover" width="150" />
+                    <img src={imagePreview} alt="Thumbnail preview" className="rounded-md object-cover" width="150" loading="lazy" />
                   </div>
                 )}
              </div>
