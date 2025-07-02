@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const VideoSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,10 +48,10 @@ export const VideoSection = () => {
                   )}
                 </div>
                 <div className="p-4 space-y-2 flex-1 flex flex-col">
-                  <h3 className="font-semibold line-clamp-2">{video.title}</h3>
+                  <h3 className="font-semibold line-clamp-2">{language === 'hi' && video.title_hi ? video.title_hi : video.title}</h3>
                   <span className="block text-xs text-gray-500 mt-1 sm:hidden">{new Date(video.created_at).toLocaleDateString()}</span>
-                  {video.description && (
-                    <p className="text-gray-600 text-sm line-clamp-2 hidden sm:block">{video.description}</p>
+                  {(language === 'hi' && video.description_hi ? video.description_hi : video.description) && (
+                    <p className="text-gray-600 text-sm line-clamp-2 hidden sm:block">{language === 'hi' && video.description_hi ? video.description_hi : video.description}</p>
                   )}
                   <div className="flex items-center justify-between text-sm text-gray-500 mt-1 sm:mt-0">
                     <span>{video.categories?.name || 'Video'}</span>

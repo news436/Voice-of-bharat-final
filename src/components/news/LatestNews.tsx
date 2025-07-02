@@ -59,7 +59,7 @@ export function LatestNews() {
               )}
               <div className="p-3 flex-1 flex flex-col">
                 <h3 className="font-bold text-base mb-1 line-clamp-2 text-black dark:text-white">
-                  {article.title}
+                  {language === 'hi' && article.title_hi ? article.title_hi : article.title}
                 </h3>
                 <span className="text-xs text-gray-400 mb-1">
                   {article.published_at ? `${formatRelativeTime(article.published_at)} (${new Date(article.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })})` : ''}

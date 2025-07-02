@@ -6,15 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Play, MapPin, FileText, Video, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AdSlot } from '@/components/news/AdSlot';
-import { State, SupabaseArticle, SupabaseVideo, SupabaseCategory } from '@/integrations/supabase/types';
+import { SupabaseCategory } from '@/integrations/supabase/types';
 
 const StatePage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [state, setState] = useState<State | null>(null);
-  const [articles, setArticles] = useState<SupabaseArticle[]>([]);
-  const [videos, setVideos] = useState<SupabaseVideo[]>([]);
+  const [state, setState] = useState<any | null>(null);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [videos, setVideos] = useState<any[]>([]);
   const [categories, setCategories] = useState<SupabaseCategory[]>([]);
-  const [states, setStates] = useState<State[]>([]);
+  const [states, setStates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const { language, t } = useLanguage();
@@ -56,18 +56,18 @@ const StatePage = () => {
           .select('*')
           .eq('slug', slug)
           .single();
-        if (!stateResponse) {
+        if (!stateResponse.data) {
           setNotFound(true);
           setLoading(false);
           return;
         }
-        setState(stateResponse);
+        setState(stateResponse.data);
         
         // Fetch articles for this state using Supabase client
         const articlesResponse = await supabase
           .from('articles')
           .select('*')
-          .eq('state', stateResponse.id);
+          .eq('state_id', stateResponse.data.id);
         if (articlesResponse.data) {
           setArticles(articlesResponse.data);
         }
@@ -76,7 +76,7 @@ const StatePage = () => {
         const videosResponse = await supabase
           .from('videos')
           .select('*')
-          .eq('state_id', stateResponse.id);
+          .eq('state_id', stateResponse.data.id);
         if (videosResponse.data) {
           setVideos(videosResponse.data);
         }
@@ -177,7 +177,7 @@ const StatePage = () => {
               </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
                   {videos.map((video) => {
-                    const title = language === 'hi' && video.title_hi ? video.title_hi : video.title;
+                    const title = language === 'hi' && (video as any).title_hi ? (video as any).title_hi : video.title;
                     return (
                       <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-xl">
                         <div className="rounded-xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">

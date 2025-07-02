@@ -287,12 +287,16 @@ export const ArticleManager = () => {
 
   // Filtered articles based on search
   const filteredArticles = useMemo(() => {
-    if (!searchQuery.trim()) return articles;
-    const q = searchQuery.trim().toLowerCase();
-    return articles.filter(a =>
-      (a.title && a.title.toLowerCase().includes(q)) ||
-      (a.title_hi && a.title_hi.toLowerCase().includes(q))
-    );
+    let result = articles;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = articles.filter(a =>
+        (a.title && a.title.toLowerCase().includes(q)) ||
+        (a.title_hi && a.title_hi.toLowerCase().includes(q))
+      );
+    }
+    // Sort by created_at descending (newest first)
+    return result.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [articles, searchQuery]);
 
   if (showForm) {
