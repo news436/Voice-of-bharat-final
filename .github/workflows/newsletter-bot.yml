@@ -1,0 +1,33 @@
+name: Run Newsletter Bot
+
+on:
+  workflow_dispatch: # Allows manual trigger
+  schedule:
+    - cron: '0 6 * * *' # Runs every day at 6:00 UTC (change as needed)
+
+jobs:
+  run-newsletter-bot:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Voice-of-bharat-final/newsletter-bot
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run newsletter bot
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+        run: node newsletter.js
