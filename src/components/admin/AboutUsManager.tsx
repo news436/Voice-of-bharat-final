@@ -50,13 +50,13 @@ export const AboutUsManager = () => {
       if (data) {
         setAboutUsId(data.id || null);
         setShortDescription(data.short_description || '');
-        setShortDescriptionHi(data.short_description_hi || '');
+        if ('short_description_hi' in data) setShortDescriptionHi((data.short_description_hi ?? '') as string);
         setDetailedContent(data.detailed_content || '');
-        setDetailedContentHi(data.detailed_content_hi || '');
-        setHeroImageUrl(data.hero_image_url || '');
-        setTeamImageUrl(data.team_image_url || '');
-        setHeroImagePreview(data.hero_image_url || null);
-        setTeamImagePreview(data.team_image_url || null);
+        if ('detailed_content_hi' in data) setDetailedContentHi((data.detailed_content_hi ?? '') as string);
+        setHeroImageUrl((data.hero_image_url ?? '') as string);
+        setTeamImageUrl((data.team_image_url ?? '') as string);
+        setHeroImagePreview((data.hero_image_url ?? null) as string | null);
+        setTeamImagePreview((data.team_image_url ?? null) as string | null);
       } else if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
         toast({
           title: "Error fetching content",
@@ -168,15 +168,15 @@ export const AboutUsManager = () => {
           description: "About Us content has been updated.",
         });
         setShortDescription(data.short_description || '');
-        setShortDescriptionHi(data.short_description_hi || '');
+        if ('short_description_hi' in data) setShortDescriptionHi((data.short_description_hi ?? '') as string);
         setDetailedContent(data.detailed_content || '');
-        setDetailedContentHi(data.detailed_content_hi || '');
-        setHeroImageUrl(data.hero_image_url || '');
-        setTeamImageUrl(data.team_image_url || '');
+        if ('detailed_content_hi' in data) setDetailedContentHi((data.detailed_content_hi ?? '') as string);
+        setHeroImageUrl((data.hero_image_url ?? '') as string);
+        setTeamImageUrl((data.team_image_url ?? '') as string);
         setHeroImageFile(null);
         setTeamImageFile(null);
-        setHeroImagePreview(data.hero_image_url || null);
-        setTeamImagePreview(data.team_image_url || null);
+        setHeroImagePreview((data.hero_image_url ?? null) as string | null);
+        setTeamImagePreview((data.team_image_url ?? null) as string | null);
       }
     } catch (error: any) {
       toast({
@@ -221,9 +221,16 @@ export const AboutUsManager = () => {
         };
       }));
       await supabase.from('about_us_team_members').delete().neq('id', 0);
-      if (uploadedMembers.length > 0) {
+      if (uploadedMembers.length > 0 && typeof aboutUsId === 'string' && aboutUsId) {
         await supabase.from('about_us_team_members').insert(
-          uploadedMembers.map(({ name, role, image_url, ordering }) => ({ name, role, image_url, ordering }))
+          uploadedMembers.map(({ name, role, image_url, ordering }) => ({
+            id: String(Date.now() + Math.floor(Math.random() * 1000000)), // id as string for Supabase
+            name,
+            role,
+            image_url: image_url ? image_url : null,
+            ordering: Number(ordering),
+            about_us_id: aboutUsId,
+          }))
         );
       }
       toast({ title: 'Team updated', description: 'Team members have been saved.' });

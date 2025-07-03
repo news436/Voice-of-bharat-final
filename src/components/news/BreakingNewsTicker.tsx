@@ -38,14 +38,14 @@ export const BreakingNewsTicker = ({ news, language }: BreakingNewsTickerProps) 
                 <span className="bg-black/20 rounded-full px-3 py-1 md:px-5 md:py-1 transition-colors">
                   <Link
                     to={`/article/${item.slug}`}
-                    className="inline-block font-bold text-white text-xs md:text-base whitespace-nowrap focus:outline-none hover:no-underline"
+                    className="inline-block font-normal text-white text-xs md:text-base whitespace-nowrap focus:outline-none hover:no-underline"
                     style={{ minWidth: 0, maxWidth: 'none', overflow: 'visible', textOverflow: 'unset' }}
                   >
                     {language === 'hi' && item.title_hi ? item.title_hi : item.title}
                   </Link>
                 </span>
                 {index !== arr.length - 1 && (
-                  <span className="mx-2 text-white text-lg md:text-xl select-none font-bold align-middle">|</span>
+                  <span className="mx-2 text-white text-lg md:text-xl select-none font-normal align-middle">|</span>
                 )}
               </span>
             ))}
