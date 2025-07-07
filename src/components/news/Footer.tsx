@@ -39,7 +39,7 @@ export function Footer({ categories }: { categories: any[] }) {
             <h4 className="font-semibold mb-4">{t('quick_links')}</h4>
             <div className="space-y-2">
               <Link to="/about-us" className="block text-gray-300 hover:text-white">{t('about_us')}</Link>
-              <Link to="/about-us" className="block text-gray-300 hover:text-white">{t('contact')}</Link>
+              <Link to="/contact-us" className="block text-gray-300 hover:text-white">{t('contact')}</Link>
               <Link to="/privacy-policy" className="block text-gray-300 hover:text-white">{t('privacy_policy')}</Link>
             </div>
           </div>

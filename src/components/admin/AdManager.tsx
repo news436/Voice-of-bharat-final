@@ -162,7 +162,7 @@ export const AdManager = () => {
       case 4:
       case 5:
       case 7:
-        return { width: 2275, height: 150, description: 'Large Banner (e.g., 728x90)' };
+        return { width: 2275, height: 150, description: 'Large Banner (2275x150)' };
       case 6:
         return { width: 300, height: 375, description: 'Taller Rectangle (300×375)' };
       default:
@@ -270,6 +270,9 @@ export const AdManager = () => {
                             onChange={(e) => handleImageChange(slot, e)}
                             className="mt-1"
                           />
+                          <p className="mt-1 text-xs text-blue-600 font-medium">
+                            Required dimensions: {getSlotDimensions(slot).width}x{getSlotDimensions(slot).height}px
+                          </p>
                         </div>
 
                         <div>
@@ -298,13 +301,36 @@ export const AdManager = () => {
                         <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <Monitor className="h-4 w-4" />
                           <span>Desktop</span>
+                          <span className="ml-2 text-xs text-blue-600">{getSlotDimensions(slot).width}x{getSlotDimensions(slot).height}px</span>
                         </div>
-                        <div className="w-full border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden mx-auto" style={{ height: `${getSlotDimensions(slot).height}px` }}>
+                        <div
+                          className="relative border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden mx-auto"
+                          style={{
+                            width: '100%',
+                            maxWidth: `${getSlotDimensions(slot).width}px`,
+                            aspectRatio: `${getSlotDimensions(slot).width} / ${getSlotDimensions(slot).height}`,
+                            backgroundImage: 'repeating-linear-gradient(45deg, #e5e7eb 0 10px, transparent 10px 20px)',
+                          }}
+                        >
+                          {/* Scale warning */}
+                          <div className="absolute top-1 right-2 z-10 text-xs text-gray-400" style={{ display: 'none' }} id={`ad-scale-warning-${slot}`}></div>
                           {ads[slot]?.enabled ? (
                             ads[slot]?.ad_type === 'image' && (ads[slot]?.image_url || ads[slot]?.imagePreview) ? (
-                              <img src={ads[slot]?.imagePreview || ads[slot]?.image_url} alt="Ad preview" className="w-full h-full object-cover" loading="lazy" />
+                              <img
+                                src={ads[slot]?.imagePreview || ads[slot]?.image_url}
+                                alt="Ad preview"
+                                className="w-full h-full object-contain"
+                                style={{ maxWidth: '100%', maxHeight: '100%' }}
+                                loading="lazy"
+                              />
                             ) : ads[slot]?.ad_type === 'html' && ads[slot]?.html_code ? (
-                              <iframe title="Desktop Preview" srcDoc={ads[slot].html_code} sandbox="allow-scripts allow-same-origin" className="w-full h-full border-0" />
+                              <iframe
+                                title="Desktop Preview"
+                                srcDoc={ads[slot].html_code}
+                                sandbox="allow-scripts allow-same-origin"
+                                className="w-full h-full border-0"
+                                style={{ background: 'transparent' }}
+                              />
                             ) : <p className="text-xs text-muted-foreground p-4 text-center">No content for preview</p>
                           ) : <p className="text-xs text-muted-foreground p-4 text-center">Ad is disabled</p>}
                         </div>

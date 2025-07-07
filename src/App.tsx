@@ -27,6 +27,7 @@ const AboutUsPage = lazy(() => import('./pages/AboutUsPage'));
 const SupportUsPage = lazy(() => import('./pages/SupportUsPage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 const ShortUrlRedirect = lazy(() => import('./pages/ShortUrlRedirect'));
+const ContactUsPage = lazy(() => import('./pages/ContactUsPage'));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -56,6 +57,7 @@ const App = () => (
                   <Route path="/support-us" element={<MainLayout><SupportUsPage /></MainLayout>} />
                   <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicyPage /></MainLayout>} />
                   <Route path="/:shortId" element={<ShortUrlRedirect />} />
+                  <Route path="/contact-us" element={<MainLayout><ContactUsPage /></MainLayout>} />
                   <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
                 </Routes>
               </Suspense>

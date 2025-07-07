@@ -78,7 +78,7 @@ const PrivacyPolicyPage = () => {
             <p>
               If you have any questions or concerns about this Privacy Policy, please contact us at:
               <br />
-              <strong>Email:</strong> <a href="mailto:contact@voiceofbharat.com">contact@voiceofbharat.com</a>
+              <strong>Email:</strong> <a href="mailto:news@voiceofbharat.live">news@voiceofbharat.live</a>
             </p>
           </div>
         </div>

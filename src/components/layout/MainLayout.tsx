@@ -19,10 +19,36 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchSharedData = async () => {
-      const { data: catData } = await supabase.from('categories').select('*').order('name');
-      setCategories(catData || []);
-      const { data: stateData } = await supabase.from('states').select('*').order('name');
-      setStates(stateData || []);
+      const { data: catData, error: catError } = await supabase
+        .from('categories')
+        .select('*, articles:articles(count)')
+        .order('name');
+      if (catError) {
+        console.error('Error fetching categories:', catError);
+        setCategories([]);
+      } else if (catData) {
+        const categoriesWithCount = catData.map((cat: any) => ({
+          ...cat,
+          article_count: cat.articles?.length > 0 ? cat.articles[0].count : 0,
+        }));
+        categoriesWithCount.sort((a: any, b: any) => b.article_count - a.article_count);
+        setCategories(categoriesWithCount);
+      }
+      const { data: stateData, error: stateError } = await supabase
+        .from('states')
+        .select('*, articles:articles(count)')
+        .order('name');
+      if (stateError) {
+        console.error('Error fetching states:', stateError);
+        setStates([]);
+      } else if (stateData) {
+        const statesWithCount = stateData.map((state: any) => ({
+          ...state,
+          article_count: state.articles?.length > 0 ? state.articles[0].count : 0,
+        }));
+        statesWithCount.sort((a: any, b: any) => b.article_count - a.article_count);
+        setStates(statesWithCount);
+      }
       
       const { data: articles, error } = await supabase
         .from('articles')

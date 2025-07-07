@@ -35,7 +35,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTheme } from '@/contexts/ThemeContext';
 
-type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured' | 'urlshortener';
+type AdminSection = 'dashboard' | 'articles' | 'categories' | 'videos' | 'live' | 'analytics' | 'states' | 'admanager' | 'about' | 'support' | 'socials' | 'breakingnews' | 'featured' | 'urlshortener' | 'contactus';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -96,6 +96,7 @@ export const AdminLayout = ({
     { id: 'about' as AdminSection, label: 'About Us', icon: Info },
     { id: 'support' as AdminSection, label: 'Support Details', icon: Heart },
     { id: 'socials' as AdminSection, label: 'Social Links', icon: Globe },
+    { id: 'contactus' as AdminSection, label: 'Contact Us', icon: Link },
   ];
   
   const SidebarContent = () => (

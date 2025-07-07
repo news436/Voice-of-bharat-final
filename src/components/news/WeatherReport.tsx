@@ -35,20 +35,20 @@ interface WeatherCardProps {
 
 const WeatherCard = ({ city, date, temperature, weatherLabel, windSpeed, WeatherIcon, weatherBg }: WeatherCardProps) => (
   <Card className={`w-full text-white shadow-lg rounded-2xl overflow-hidden ${weatherBg}`}>
-    <CardContent className="p-8 sm:p-0 flex flex-col justify-between h-full">
-      <div className="flex justify-between items-start">
+    <CardContent className="p-4 md:p-8 flex flex-col justify-between h-full gap-6">
+      <div className="flex justify-between items-start mb-4 px-2 md:px-6">
         <div>
           <p className="text-xl font-bold">{city}</p>
           <p className="text-sm opacity-80">{date}</p>
         </div>
-        <div className="text-right">
-          <WeatherIcon className="w-12 h-12 drop-shadow-lg" />
+        <div className="text-right bg-white/10 rounded-full p-2 flex items-center justify-center">
+          <WeatherIcon className="w-10 h-10 drop-shadow-lg" />
         </div>
       </div>
-      <div className="flex justify-center items-center my-4">
+      <div className="flex justify-center items-center my-4 px-2 md:px-6">
         <p className="text-6xl font-black tracking-tighter drop-shadow-lg">{Math.round(temperature)}°</p>
       </div>
-      <div className="flex justify-between items-end mt-auto">
+      <div className="flex justify-between items-end mt-4 pt-2 px-2 md:px-6 gap-4">
         <p className="text-base font-medium">{weatherLabel}</p>
         <div className="flex items-center gap-2 text-sm">
           <Wind className="w-5 h-5" />

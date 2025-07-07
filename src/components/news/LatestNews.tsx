@@ -38,6 +38,9 @@ export function LatestNews() {
     return <div className="h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse mb-6" />;
   }
 
+  const showAll = articles.length > 20;
+  const displayedArticles = showAll ? articles.slice(0, 20) : articles;
+
   return (
     <section className="mb-12">
       <div className="flex items-center justify-between mb-6">
@@ -47,7 +50,7 @@ export function LatestNews() {
         </h2>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {articles.map(article => (
+        {displayedArticles.map(article => (
           <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
             <div className="rounded-2xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
               {article.featured_image_url && (
@@ -69,6 +72,11 @@ export function LatestNews() {
           </Link>
         ))}
       </div>
+      {showAll && (
+        <div className="flex justify-center mt-6">
+          <Link to="/search" className="text-red-600 font-semibold hover:underline text-lg">{t('view_all')}</Link>
+        </div>
+      )}
     </section>
   );
 }
