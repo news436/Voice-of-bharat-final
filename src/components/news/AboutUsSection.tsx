@@ -7,7 +7,7 @@ import { Info, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export const AboutUsSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [shortDescription, setShortDescription] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -16,11 +16,11 @@ export const AboutUsSection = () => {
       setIsLoading(true);
       const { data, error } = await (supabase as any)
         .from('about_us')
-        .select('short_description')
+        .select('short_description, short_description_hi')
         .single();
 
       if (data) {
-        setShortDescription(data.short_description);
+        setShortDescription((language === 'hi' && data.short_description_hi) ? data.short_description_hi : data.short_description);
       } else if (error && error.code !== 'PGRST116') {
         console.error("Error fetching About Us content:", error);
       }
@@ -28,7 +28,7 @@ export const AboutUsSection = () => {
     };
 
     fetchAboutUsContent();
-  }, []);
+  }, [language]);
 
   if (isLoading) {
     return (

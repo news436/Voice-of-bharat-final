@@ -14,7 +14,7 @@ export const SupportUsCta = () => {
           {t('support.our_mission')}
         </h2>
         <p className="mt-4 text-lg leading-6 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Independent journalism is vital for a healthy democracy. Your contribution helps us stay independent and bring you the stories that matter.
+          {t('support.cta_description')}
         </p>
         <div className="mt-8">
           <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105">

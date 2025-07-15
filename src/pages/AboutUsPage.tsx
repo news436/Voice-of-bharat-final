@@ -35,7 +35,7 @@ const AboutUsPage = () => {
       try {
         const { data, error } = await supabase
           .from('about_us')
-          .select('detailed_content, hero_image_url, team_image_url')
+          .select('detailed_content, detailed_content_hi, hero_image_url, team_image_url')
           .order('updated_at', { ascending: false });
 
         const about = Array.isArray(data) && data.length > 0 ? data[0] : null;
@@ -44,7 +44,7 @@ const AboutUsPage = () => {
 
         if (about) {
           setContent({
-            detailedContent: about.detailed_content || '',
+            detailedContent: (language === 'hi' && about.detailed_content_hi) ? about.detailed_content_hi : about.detailed_content || '',
             heroImageUrl: about.hero_image_url || '/placeholder-hero.jpg',
             teamImageUrl: about.team_image_url || '/placeholder-team.jpg',
           });
@@ -78,7 +78,7 @@ const AboutUsPage = () => {
       if (data) setTeamMembers(data);
     };
     fetchTeamMembers();
-  }, []);
+  }, [language]);
 
   const AnimatedSection = ({ children }) => (
     <motion.div

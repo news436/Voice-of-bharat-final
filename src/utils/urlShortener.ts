@@ -330,3 +330,70 @@ export function testShortUrlGeneration(articleId: string): void {
   
   console.log('✅ Short URL is', shortUrl.length, 'characters vs', oldUrl.length, 'characters');
 } 
+
+// --- VIDEO SHARING UTILITIES ---
+
+// Generate preview URL for social media sharing (video)
+export function generateVideoPreviewUrl(videoId: string): string {
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
+  return `${PREVIEW_BASE_URL}/videos/preview/${videoId}`;
+}
+
+// Generate short preview URL for social media sharing (video)
+export function generateVideoShortPreviewUrl(videoId: string): string {
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
+  const shortId = btoa(unescape(encodeURIComponent(videoId)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  return `${PREVIEW_BASE_URL}/videos/p/${shortId}`;
+}
+
+// Generate social sharing text with short preview URL (video)
+export function generateVideoSocialShareTextWithShortPreview(videoTitle: string, videoId: string, platform: 'whatsapp' | 'twitter' | 'instagram' | 'facebook' = 'twitter'): string {
+  const previewUrl = generateVideoShortPreviewUrl(videoId);
+  const maxLength = platform === 'twitter' ? 280 : 1000;
+  let text = `${videoTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  if (platform === 'twitter' && text.length > maxLength) {
+    const titleMaxLength = maxLength - previewUrl.length - 20;
+    const truncatedTitle = videoTitle.length > titleMaxLength 
+      ? videoTitle.substring(0, titleMaxLength - 3) + '...'
+      : videoTitle;
+    text = `${truncatedTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  }
+  return text;
+}
+
+// WhatsApp sharing for video with short preview
+export function generateWhatsAppShareUrlWithVideoShortPreview(videoTitle: string, videoId: string): string {
+  const text = generateVideoSocialShareTextWithShortPreview(videoTitle, videoId, 'whatsapp');
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+export function generateWhatsAppMobileShareUrlWithVideoShortPreview(videoTitle: string, videoId: string): string {
+  const text = generateVideoSocialShareTextWithShortPreview(videoTitle, videoId, 'whatsapp');
+  return `whatsapp://send?text=${encodeURIComponent(text)}`;
+}
+
+export async function shareToWhatsAppWithVideoShortPreview(videoTitle: string, videoId: string): Promise<void> {
+  const text = generateVideoSocialShareTextWithShortPreview(videoTitle, videoId, 'whatsapp');
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: videoTitle,
+        text: text,
+      });
+      return;
+    } catch (error) {
+      console.log('Web Share API failed, falling back to WhatsApp URL');
+    }
+  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  let whatsappUrl;
+  if (isMobile) {
+    whatsappUrl = generateWhatsAppMobileShareUrlWithVideoShortPreview(videoTitle, videoId);
+  } else {
+    whatsappUrl = generateWhatsAppShareUrlWithVideoShortPreview(videoTitle, videoId);
+  }
+  window.open(whatsappUrl, '_blank');
+} 

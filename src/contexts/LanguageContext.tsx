@@ -100,7 +100,8 @@ const translations = {
     'support.our_mission': 'Support Our Mission',
     'nav.support_us': 'Support Us',
     'learn.more': 'Learn More',
-    'contribute.now': 'Contribute Now'
+    'contribute.now': 'Contribute Now',
+    'support.cta_description': 'Independent journalism is vital for a healthy democracy. Your contribution helps us stay independent and bring you the stories that matter.'
   },
   hi: {
     'nav.home': 'होम',
@@ -193,7 +194,8 @@ const translations = {
     'support.our_mission': 'हमारे मिशन का समर्थन करें',
     'nav.support_us': 'सपोर्ट करें',
     'learn.more': 'और जानें',
-    'contribute.now': 'अभी योगदान करें'
+    'contribute.now': 'अभी योगदान करें',
+    'support.cta_description': 'स्वतंत्र पत्रकारिता एक स्वस्थ लोकतंत्र के लिए आवश्यक है। आपका योगदान हमें स्वतंत्र रहने और आपके लिए महत्वपूर्ण खबरें लाने में मदद करता है।'
   }
 };
 
