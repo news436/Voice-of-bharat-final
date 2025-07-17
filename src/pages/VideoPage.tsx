@@ -23,7 +23,10 @@ import {
   generateVideoPreviewUrl,
   generateVideoShortPreviewUrl,
   generateVideoSocialShareTextWithShortPreview,
-  shareToWhatsAppWithVideoShortPreview
+  shareToWhatsAppWithVideoShortPreview,
+  fetchFacebookUrl,
+  getShortDescription,
+  generateVideoShareMessage,
 } from '@/utils/urlShortener';
 import { Check, Copy } from 'lucide-react';
 
@@ -34,6 +37,7 @@ const VideoPage = () => {
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { t, language } = useLanguage();
+  const [facebookUrl, setFacebookUrl] = useState('');
 
   const VIDEO_FILTERS = [
     { label: t("all"), value: "all" },
@@ -86,33 +90,39 @@ const VideoPage = () => {
       setLoading(false);
     };
     fetchData();
+    fetchFacebookUrl().then(setFacebookUrl);
   }, [id, filter, sort]);
 
-  // --- Share Functions (mirroring ArticlePage, but for videos) ---
+  const shortDescription = getShortDescription(language === 'hi' && video?.description_hi ? video.description_hi : video?.description || '');
+  const previewUrl = video?.id ? generateVideoShortPreviewUrl(video.id) : '';
+  const shareMessage = generateVideoShareMessage(shortDescription, previewUrl, facebookUrl);
+
+  // --- Share Functions (video-specific, robust) ---
   const copyVideoLink = async () => {
+    if (!video?.id) return;
     try {
-      const previewUrl = generateVideoPreviewUrl(video?.id || '');
-      await copyToClipboard(previewUrl);
+      await copyToClipboard(shareMessage);
       setCopied(true);
       toast({
-        title: 'Link copied!',
-        description: 'Video preview link has been copied to clipboard.',
+        title: 'Message copied!',
+        description: 'Share message has been copied to clipboard.',
       });
       setTimeout(() => setCopied(false), 2000);
       setShowShareDropdown(false);
     } catch (err) {
       toast({
         title: 'Failed to copy',
-        description: 'Please copy the link manually.',
+        description: 'Please copy the message manually.',
         variant: 'destructive',
       });
     }
   };
 
   const shareOnWhatsApp = async () => {
+    if (!video?.id) return;
     try {
-      const title = language === 'hi' && video?.title_hi ? video.title_hi : video?.title;
-      await shareToWhatsAppWithVideoShortPreview(title, video?.id || '');
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+      window.open(whatsappUrl, '_blank');
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -124,12 +134,11 @@ const VideoPage = () => {
   };
 
   const shareOnFacebook = async () => {
+    if (!video?.id) return;
     try {
-      const previewUrl = generateVideoPreviewUrl(video?.id || '');
-      const cacheBuster = Date.now();
-      const randomId = Math.random().toString(36).substring(7);
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}&t=${cacheBuster}&r=${randomId}`;
-      window.open(facebookUrl, '_blank', 'width=600,height=400');
+      const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
+      await copyToClipboard(shareMessage);
+      window.open(facebookShareUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -141,10 +150,9 @@ const VideoPage = () => {
   };
 
   const shareOnTwitter = async () => {
+    if (!video?.id) return;
     try {
-      const title = language === 'hi' && video?.title_hi ? video.title_hi : video?.title;
-      const text = generateVideoSocialShareTextWithShortPreview(title, video?.id || '', 'twitter');
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`;
       window.open(twitterUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
@@ -157,32 +165,29 @@ const VideoPage = () => {
   };
 
   const shareOnInstagram = async () => {
+    if (!video?.id) return;
     try {
-      const title = language === 'hi' && video?.title_hi ? video.title_hi : video?.title;
-      const text = generateVideoSocialShareTextWithShortPreview(title, video?.id || '', 'instagram');
-      await copyToClipboard(text);
+      await copyToClipboard(shareMessage);
       toast({
         title: 'Ready for Instagram!',
-        description: 'Video details copied to clipboard. You can now paste this in your Instagram story or post.',
+        description: 'Share message copied to clipboard. You can now paste this in your Instagram story or post.',
       });
       setShowShareDropdown(false);
     } catch (err) {
       toast({
         title: 'Copy failed',
-        description: 'Please copy the video details manually for Instagram sharing.',
+        description: 'Please copy the message manually for Instagram sharing.',
         variant: 'destructive',
       });
     }
   };
 
   const handleShare = async () => {
+    if (!video?.id) return;
     if (navigator.share) {
       try {
-        const title = language === 'hi' && video?.title_hi ? video.title_hi : video?.title;
-        const text = generateVideoSocialShareTextWithShortPreview(title, video?.id || '');
         await navigator.share({
-          title: title,
-          text: text,
+          text: shareMessage,
         });
       } catch (err) {
         setShowShareDropdown(!showShareDropdown);
@@ -244,26 +249,26 @@ const VideoPage = () => {
                     </h1>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
                       <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-gray-700 dark:text-gray-300">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        <span>{new Date(video.created_at).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A2 2 0 0020 6.382V5.618a2 2 0 00-1.447-1.894L15 2.382M9 10L4.447 7.724A2 2 0 014 5.618V4.382a2 2 0 011.447-1.894L9 2.382m6 7.618V21m-6-11.618V21" /></svg></span>
+                        <span className="capitalize">{video.video_type}</span>
+                      </div>
+                      {video.categories?.name && (
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-5 w-5" />
-                          <span>{new Date(video.created_at).toLocaleString()}</span>
+                          <span className="h-5 w-5"><Tag className="h-5 w-5" /></span>
+                          <span>{video.categories.name}</span>
                         </div>
+                      )}
+                      {video.states?.name && (
                         <div className="flex items-center gap-2">
-                          <span className="h-5 w-5"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A2 2 0 0020 6.382V5.618a2 2 0 00-1.447-1.894L15 2.382M9 10L4.447 7.724A2 2 0 014 5.618V4.382a2 2 0 011.447-1.894L9 2.382m6 7.618V21m-6-11.618V21" /></svg></span>
-                          <span className="capitalize">{video.video_type}</span>
+                          <span className="h-5 w-5"><Tag className="h-5 w-5" /></span>
+                          <span>{video.states.name}</span>
                         </div>
-                        {video.categories?.name && (
-                          <div className="flex items-center gap-2">
-                            <span className="h-5 w-5"><Tag className="h-5 w-5" /></span>
-                            <span>{video.categories.name}</span>
-                          </div>
-                        )}
-                        {video.states?.name && (
-                          <div className="flex items-center gap-2">
-                            <span className="h-5 w-5"><Tag className="h-5 w-5" /></span>
-                            <span>{video.states.name}</span>
-                          </div>
-                        )}
+                      )}
                       </div>
                       <div className="flex items-center gap-3">
                         <Button 

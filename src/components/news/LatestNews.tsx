@@ -52,7 +52,7 @@ export function LatestNews() {
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {displayedArticles.map(article => (
           <Link key={article.id} to={`/article/${article.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-black rounded-2xl">
-            <div className="rounded-2xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all">
+            <div className="rounded-2xl shadow bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden hover:shadow-xl transition-all transition-transform duration-200 ease-in-out hover:scale-105">
               {article.featured_image_url && (
                 <img
                   src={article.featured_image_url}

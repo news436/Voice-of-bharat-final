@@ -36,7 +36,7 @@ export const VideoSection = () => {
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {videos.slice(0, 6).map((video) => (
           <Link key={video.id} to={`/video/${video.id}`} className="block focus:outline-none focus:ring-2 focus:ring-red-600 rounded-lg">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden transition-transform duration-200 ease-in-out hover:scale-105">
               <CardContent className="flex-1 flex flex-col p-0">
                 <div className="relative">
                   {video.thumbnail_url && (

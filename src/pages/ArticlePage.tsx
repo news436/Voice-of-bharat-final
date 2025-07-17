@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration, fetchFacebookUrl, getShortDescription, generateArticleShareMessage } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import { SupabaseArticle } from '@/integrations/supabase/types';
 import { useArticleCache } from '@/contexts/ArticleCacheContext';
@@ -27,16 +27,21 @@ const ArticlePage = () => {
   const shareDropdownRef = useRef<HTMLDivElement>(null);
   const { getArticle, setArticle: setArticleCache } = useArticleCache();
   const [isShowingRecentFallback, setIsShowingRecentFallback] = useState(false);
+  const [facebookUrl, setFacebookUrl] = useState('');
 
   // Share functions
   const copyArticleLink = async () => {
     try {
-      const previewUrl = generatePreviewUrl(article?.id || '');
-      await copyToClipboard(previewUrl);
+      const shareMessage = generateArticleShareMessage(
+        getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+        article?.id ? generateShortPreviewUrl(article.id) : '',
+        facebookUrl
+      );
+      await copyToClipboard(shareMessage);
       setCopied(true);
       toast({
-        title: "Link copied!",
-        description: "Article preview link has been copied to clipboard.",
+        title: "Message copied!",
+        description: "Share message has been copied to clipboard.",
       });
       setTimeout(() => setCopied(false), 2000);
       setShowShareDropdown(false);
@@ -44,7 +49,7 @@ const ArticlePage = () => {
       console.error('Copy failed:', err);
       toast({
         title: "Failed to copy",
-        description: "Please copy the link manually.",
+        description: "Please copy the message manually.",
         variant: "destructive",
       });
     }
@@ -52,11 +57,13 @@ const ArticlePage = () => {
 
   const shareOnWhatsApp = async () => {
     try {
-      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      console.log('📱 WhatsApp share - Article ID:', article?.id);
-      
-      // Use the new short preview URL function for cleaner sharing
-      await shareToWhatsAppWithShortPreview(title, article?.id || '');
+      const shareMessage = generateArticleShareMessage(
+        getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+        article?.id ? generateShortPreviewUrl(article.id) : '',
+        facebookUrl
+      );
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
+      window.open(whatsappUrl, '_blank');
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -70,11 +77,14 @@ const ArticlePage = () => {
   const shareOnFacebook = async () => {
     try {
       const previewUrl = generatePreviewUrl(article?.id || '');
-      // Add multiple cache-busting parameters to force Facebook to fetch fresh meta tags
-      const cacheBuster = Date.now();
-      const randomId = Math.random().toString(36).substring(7);
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}&t=${cacheBuster}&r=${randomId}`;
-      window.open(facebookUrl, '_blank', 'width=600,height=400');
+      const shareMessage = generateArticleShareMessage(
+        getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+        previewUrl,
+        facebookUrl
+      );
+      const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewUrl)}`;
+      await copyToClipboard(shareMessage);
+      window.open(facebookShareUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
       toast({
@@ -87,9 +97,13 @@ const ArticlePage = () => {
 
   const shareOnTwitter = async () => {
     try {
-      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithShortPreview(title, article?.id || '', 'twitter');
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      const previewUrl = generatePreviewUrl(article?.id || '');
+      const shareMessage = generateArticleShareMessage(
+        getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+        previewUrl,
+        facebookUrl
+      );
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMessage)}`;
       window.open(twitterUrl, '_blank', 'width=600,height=400');
       setShowShareDropdown(false);
     } catch (err) {
@@ -103,22 +117,22 @@ const ArticlePage = () => {
 
   const shareOnInstagram = async () => {
     try {
-      const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-      const text = generateSocialShareTextWithShortPreview(title, article?.id || '', 'instagram');
-      
-      // Instagram doesn't support direct URL sharing, so we copy to clipboard
-      // Use the mobile-friendly clipboard utility
-      await copyToClipboard(text);
-      
+      const previewUrl = generatePreviewUrl(article?.id || '');
+      const shareMessage = generateArticleShareMessage(
+        getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+        previewUrl,
+        facebookUrl
+      );
+      await copyToClipboard(shareMessage);
       toast({
         title: "Ready for Instagram!",
-        description: "Article details copied to clipboard. You can now paste this in your Instagram story or post.",
+        description: "Share message copied to clipboard. You can now paste this in your Instagram story or post.",
       });
       setShowShareDropdown(false);
     } catch (err) {
       toast({
         title: "Copy failed",
-        description: "Please copy the article details manually for Instagram sharing.",
+        description: "Please copy the message manually for Instagram sharing.",
         variant: "destructive",
       });
     }
@@ -126,24 +140,20 @@ const ArticlePage = () => {
 
   const handleShare = async () => {
     if (navigator.share) {
-      // Use native share if available
       try {
-        const title = language === 'hi' && article?.title_hi ? article.title_hi : article?.title;
-        const text = generateSocialShareTextWithShortPreview(title, article?.id || '');
-        
-        // For Web Share API, only include text (which already contains the URL)
-        // Don't include url parameter to avoid duplication
+        const previewUrl = generatePreviewUrl(article?.id || '');
+        const shareMessage = generateArticleShareMessage(
+          getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
+          previewUrl,
+          facebookUrl
+        );
         await navigator.share({
-          title: title,
-          text: text,
-          // url: previewUrl, // Removed to avoid duplicate URLs
+          text: shareMessage,
         });
       } catch (err) {
-        // Fallback to dropdown if native share fails
         setShowShareDropdown(!showShareDropdown);
       }
     } else {
-      // Fallback to dropdown
       setShowShareDropdown(!showShareDropdown);
     }
   };
@@ -250,6 +260,10 @@ const ArticlePage = () => {
       resetMetaTags();
     };
   }, [slug, id, language]);
+
+  useEffect(() => {
+    fetchFacebookUrl().then(setFacebookUrl);
+  }, []);
 
   // Fetch related/recent articles whenever article changes
   useEffect(() => {
@@ -395,6 +409,10 @@ const ArticlePage = () => {
     const readingTime = Math.ceil(wordCount / wordsPerMinute);
     return readingTime;
   };
+
+  const shortDescription = getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || '');
+  const previewUrl = article?.id ? generateShortPreviewUrl(article.id) : '';
+  const shareMessage = generateArticleShareMessage(shortDescription, previewUrl, facebookUrl);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">

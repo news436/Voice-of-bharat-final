@@ -72,7 +72,7 @@ export const FeaturedArticles = () => {
         {/* Main Featured Article (Slider) */}
         <div className="transition-all duration-700 ease-in-out">
           <Link to={`/article/${mainArticle.slug}`}>
-            <Card className="border-none shadow-none bg-transparent p-0 m-0 h-96 overflow-hidden flex flex-col">
+            <Card className="transition-transform duration-200 ease-in-out hover:scale-105">
               {mainArticle.featured_image_url && (
                 <div className="relative w-full h-full flex items-end justify-center overflow-hidden rounded-2xl">
                   <img

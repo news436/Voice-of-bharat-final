@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const LiveClock = () => {
   const [time, setTime] = useState(new Date());
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timerId = setInterval(() => {
@@ -25,7 +27,7 @@ export const LiveClock = () => {
 
   return (
     <div className="flex items-center justify-center text-sm font-medium tracking-wide text-white opacity-90 select-none">
-      <span>{getIndianTimeString(time)} (IST)</span>
+      <span>{getIndianTimeString(time)}{!isMobile && ' (IST)'}</span>
     </div>
   );
 }; 

@@ -397,3 +397,35 @@ export async function shareToWhatsAppWithVideoShortPreview(videoTitle: string, v
   }
   window.open(whatsappUrl, '_blank');
 } 
+
+// Fetch Facebook URL from Supabase socials table
+export async function fetchFacebookUrl(): Promise<string> {
+  try {
+    const { data } = await supabase.from('socials').select('facebook_url').limit(1).single();
+    return data?.facebook_url || '';
+  } catch {
+    return '';
+  }
+}
+
+// Generate short description (first sentence/line)
+export function getShortDescription(text: string): string {
+  if (!text) return '';
+  return text.split(/[.!?\n]/)[0];
+}
+
+// Generate share message for articles: short description + preview link + Facebook link
+export function generateArticleShareMessage(shortDescription: string, previewUrl: string, facebookUrl: string): string {
+  let message = shortDescription;
+  if (previewUrl) message += `\n${previewUrl}`;
+  if (facebookUrl) message += `\nऔर खबरों के लिए हमें फेसबुक पर फॉलो करें: ${facebookUrl}`;
+  return message;
+}
+
+// Generate share message for videos: short description + preview link + Facebook link
+export function generateVideoShareMessage(shortDescription: string, previewUrl: string, facebookUrl: string): string {
+  let message = shortDescription;
+  if (previewUrl) message += `\n${previewUrl}`;
+  if (facebookUrl) message += `\nऔर खबरों के लिए हमें फेसबुक पर फॉलो करें: ${facebookUrl}`;
+  return message;
+} 
