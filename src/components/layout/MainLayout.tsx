@@ -8,6 +8,7 @@ import { BreakingNewsTicker } from '@/components/news/BreakingNewsTicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SupportUsCta } from '../news/SupportUsCta';
 import { ArticleCacheProvider } from '@/contexts/ArticleCacheContext';
+import { AdSlot } from '@/components/news/AdSlot';
 
 export const MainLayout = ({ children }: { children: React.ReactNode }) => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -94,6 +95,9 @@ export const MainLayout = ({ children }: { children: React.ReactNode }) => {
           {children}
         </main>
         {location.pathname !== '/support-us' && <SupportUsCta />}
+        <div className="my-6">
+          <AdSlot slotNumber={15} />
+        </div>
         <Footer categories={categories} />
         {showNewsletterPopup && <NewsletterSignup onClose={handleClosePopup} />}
       </div>

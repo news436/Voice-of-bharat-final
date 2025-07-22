@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AdSlot } from './AdSlot';
 
 interface MoreArticlesSectionProps {
   currentArticleId: string;
@@ -113,7 +114,7 @@ export const MoreArticlesSection = ({ currentArticleId, currentArticleSlug }: Mo
         ))}
       </div>
       {visibleArticles.length < uniqueArticles.length && (
-        <div className="flex justify-center mt-8">
+        <div className="flex flex-col items-center mt-8">
           <Button
             onClick={handleShowMore}
             disabled={loading}
@@ -130,6 +131,18 @@ export const MoreArticlesSection = ({ currentArticleId, currentArticleSlug }: Mo
               'View More'
             )}
           </Button>
+          {/* Ad Slots 10 and 11 side by side after View More */}
+          <div className="w-full flex flex-col md:flex-row justify-center items-center gap-6 my-8">
+            <div className="flex-1 flex justify-center"><AdSlot slotNumber={10} /></div>
+            <div className="flex-1 flex justify-center"><AdSlot slotNumber={11} /></div>
+          </div>
+        </div>
+      )}
+      {/* If all articles are shown, still show AdSlots 10 and 11 at the end */}
+      {visibleArticles.length >= uniqueArticles.length && (
+        <div className="w-full flex flex-col md:flex-row justify-center items-center gap-6 my-8">
+          <div className="flex-1 flex justify-center"><AdSlot slotNumber={10} /></div>
+          <div className="flex-1 flex justify-center"><AdSlot slotNumber={11} /></div>
         </div>
       )}
     </section>

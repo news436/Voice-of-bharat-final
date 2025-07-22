@@ -51,7 +51,15 @@ export const AdminDashboard = ({
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Fetch articles for stats
+        // Fetch total article count
+        const { count: totalArticles } = await supabase
+          .from('articles')
+          .select('*', { count: 'exact', head: true });
+        // Fetch all article statuses for accurate published/draft counts
+        const { data: allArticles } = await supabase.from('articles').select('status');
+        const publishedArticles = allArticles ? allArticles.filter((a: any) => a.status === 'published').length : 0;
+        const draftArticles = allArticles ? allArticles.filter((a: any) => a.status === 'draft').length : 0;
+        // Fetch articles for stats (latest 100 for breakdowns)
         const articlesResponse = await supabase.from('articles').select('*').limit(100);
         const articles = articlesResponse.data || [];
         
@@ -69,16 +77,13 @@ export const AdminDashboard = ({
           setViewsStats({ totalViews: viewsResponse.data.length, articles: viewsResponse.data });
         }
         
-        const totalArticles = articles.length;
-        const publishedArticles = articles.filter((a: any) => a.status === 'published').length;
-        const draftArticles = articles.filter((a: any) => a.status === 'draft').length;
         const breakingNews = articles.filter((a: any) => a.is_breaking).length;
         const totalVideos = videos.length;
         const activeStreams = streams.length;
 
         setStats(prev => ({ 
           ...prev, 
-          totalArticles, 
+          totalArticles: totalArticles || 0, 
           publishedArticles, 
           draftArticles, 
           breakingNews, 

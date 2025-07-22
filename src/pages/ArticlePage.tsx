@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { MoreArticlesSection } from '@/components/news/MoreArticlesSection';
 import { toast } from '@/hooks/use-toast';
 import { ArticleVideoPlayer } from '@/components/news/ArticleVideoPlayer';
-import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration, fetchFacebookUrl, getShortDescription, generateArticleShareMessage } from '@/utils/urlShortener';
+import { getShortUrl, generateSocialShareText, generateWhatsAppShareUrl, generateWhatsAppMobileShareUrl, shareToWhatsApp, copyToClipboard, generatePreviewUrl, generateSocialShareTextWithPreview, shareToWhatsAppWithPreview, generateShortPreviewUrl, generateSocialShareTextWithShortPreview, shareToWhatsAppWithShortPreview, testShortUrlGeneration, fetchFacebookUrl, getShortDescription, generateArticleShareMessage, generateCustomArticleWhatsAppShareText } from '@/utils/urlShortener';
 import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 import { SupabaseArticle } from '@/integrations/supabase/types';
 import { useArticleCache } from '@/contexts/ArticleCacheContext';
@@ -32,9 +32,10 @@ const ArticlePage = () => {
   // Share functions
   const copyArticleLink = async () => {
     try {
-      const shareMessage = generateArticleShareMessage(
+      const shareMessage = generateCustomArticleWhatsAppShareText(
+        article?.title || '',
+        article?.id || '',
         getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
-        article?.id ? generateShortPreviewUrl(article.id) : '',
         facebookUrl
       );
       await copyToClipboard(shareMessage);
@@ -57,9 +58,10 @@ const ArticlePage = () => {
 
   const shareOnWhatsApp = async () => {
     try {
-      const shareMessage = generateArticleShareMessage(
+      const shareMessage = generateCustomArticleWhatsAppShareText(
+        article?.title || '',
+        article?.id || '',
         getShortDescription(language === 'hi' && article?.summary_hi ? article.summary_hi : article?.summary || ''),
-        article?.id ? generateShortPreviewUrl(article.id) : '',
         facebookUrl
       );
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
@@ -615,12 +617,22 @@ const ArticlePage = () => {
                 </div>
               )}
             </section>
+            {/* Ad Slot 13 - Below Related Articles */}
+            <div className="mt-4">
+              <AdSlot slotNumber={13} />
+            </div>
           </div>
         </div>
         
         {/* Bottom Ad */}
         <div className="mt-12">
           <AdSlot slotNumber={7} />
+        </div>
+
+        {/* Ad Slots 8 and 9 - Between article and More Articles */}
+        <div className="flex flex-col items-center gap-6 my-8">
+          <AdSlot slotNumber={8} />
+          <AdSlot slotNumber={9} />
         </div>
 
         {/* More Articles Section */}

@@ -398,6 +398,12 @@ export async function shareToWhatsAppWithVideoShortPreview(videoTitle: string, v
   window.open(whatsappUrl, '_blank');
 } 
 
+// Update the video WhatsApp share message to include the WhatsApp group link and Facebook page link
+export function generateCustomVideoWhatsAppShareText(videoTitle: string, videoId: string, shortDescription: string, facebookPageUrl: string): string {
+  const previewUrl = generateVideoShortPreviewUrl(videoId);
+  return `${shortDescription}\n${previewUrl}\nहमें फेसबुक पर फॉलो करें: ${facebookPageUrl}\n----------------------------------------\nहमारे व्हाट्सएप ग्रुप से जुड़ें: https://chat.whatsapp.com/G07QUAWvRkKEGUvk2KBmFu?mode=ac_c`;
+}
+
 // Fetch Facebook URL from Supabase socials table
 export async function fetchFacebookUrl(): Promise<string> {
   try {
@@ -428,4 +434,77 @@ export function generateVideoShareMessage(shortDescription: string, previewUrl: 
   if (previewUrl) message += `\n${previewUrl}`;
   if (facebookUrl) message += `\nऔर खबरों के लिए हमें फेसबुक पर फॉलो करें: ${facebookUrl}`;
   return message;
+} 
+
+// --- LIVE STREAM SHARING UTILITIES ---
+
+// Generate short preview URL for social media sharing (live stream)
+export function generateLiveShortPreviewUrl(liveId: string): string {
+  const PREVIEW_BASE_URL = 'https://vob.voiceofbharat.live/api';
+  const shortId = btoa(unescape(encodeURIComponent(liveId)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+  return `${PREVIEW_BASE_URL}/live/p/${shortId}`;
+}
+
+// Generate social sharing text with short preview URL (live stream)
+export function generateLiveSocialShareTextWithShortPreview(liveTitle: string, liveId: string, platform: 'whatsapp' | 'twitter' | 'instagram' | 'facebook' = 'twitter'): string {
+  const previewUrl = generateLiveShortPreviewUrl(liveId);
+  const maxLength = platform === 'twitter' ? 280 : 1000;
+  let text = `${liveTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  if (platform === 'twitter' && text.length > maxLength) {
+    const titleMaxLength = maxLength - previewUrl.length - 20;
+    const truncatedTitle = liveTitle.length > titleMaxLength 
+      ? liveTitle.substring(0, titleMaxLength - 3) + '...'
+      : liveTitle;
+    text = `${truncatedTitle}\n\nvia @voiceofbharat\n${previewUrl}`;
+  }
+  return text;
+}
+
+// WhatsApp sharing for live with short preview
+export function generateWhatsAppShareUrlWithLiveShortPreview(liveTitle: string, liveId: string): string {
+  const text = generateLiveSocialShareTextWithShortPreview(liveTitle, liveId, 'whatsapp');
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+export function generateWhatsAppMobileShareUrlWithLiveShortPreview(liveTitle: string, liveId: string): string {
+  const text = generateLiveSocialShareTextWithShortPreview(liveTitle, liveId, 'whatsapp');
+  return `whatsapp://send?text=${encodeURIComponent(text)}`;
+}
+
+export async function shareToWhatsAppWithLiveShortPreview(liveTitle: string, liveId: string): Promise<void> {
+  const text = generateLiveSocialShareTextWithShortPreview(liveTitle, liveId, 'whatsapp');
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: liveTitle,
+        text: text,
+      });
+      return;
+    } catch (error) {
+      console.log('Web Share API failed, falling back to WhatsApp URL');
+    }
+  }
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  let whatsappUrl;
+  if (isMobile) {
+    whatsappUrl = generateWhatsAppMobileShareUrlWithLiveShortPreview(liveTitle, liveId);
+  } else {
+    whatsappUrl = generateWhatsAppShareUrlWithLiveShortPreview(liveTitle, liveId);
+  }
+  window.open(whatsappUrl, '_blank');
+} 
+
+// Custom WhatsApp share text for articles
+export function generateCustomArticleWhatsAppShareText(articleTitle: string, articleId: string, shortDescription: string, facebookPageUrl: string): string {
+  const previewUrl = generateShortPreviewUrl(articleId);
+  return `${shortDescription}\n${previewUrl}\nहमें फेसबुक पर फॉलो करें: ${facebookPageUrl}\n----------------------------------------\nहमारे व्हाट्सएप ग्रुप से जुड़ें: https://chat.whatsapp.com/G07QUAWvRkKEGUvk2KBmFu?mode=ac_c`;
+}
+
+// Custom WhatsApp share text for live streams
+export function generateCustomLiveWhatsAppShareText(liveTitle: string, liveId: string, shortDescription: string, facebookPageUrl: string): string {
+  const previewUrl = generateLiveShortPreviewUrl(liveId);
+  return `${shortDescription}\n${previewUrl}\nहमें फेसबुक पर फॉलो करें: ${facebookPageUrl}\n----------------------------------------\nहमारे व्हाट्सएप ग्रुप से जुड़ें: https://chat.whatsapp.com/G07QUAWvRkKEGUvk2KBmFu?mode=ac_c`;
 } 

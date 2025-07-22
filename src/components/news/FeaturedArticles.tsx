@@ -68,17 +68,17 @@ export const FeaturedArticles = () => {
         {t('featured_stories')}
       </h2>
       
-      <div className="w-full relative">
+      <div className="w-full max-w-4xl mx-auto relative">
         {/* Main Featured Article (Slider) */}
         <div className="transition-all duration-700 ease-in-out">
           <Link to={`/article/${mainArticle.slug}`}>
             <Card className="transition-transform duration-200 ease-in-out hover:scale-105">
               {mainArticle.featured_image_url && (
-                <div className="relative w-full h-full flex items-end justify-center overflow-hidden rounded-2xl">
+                <div className="relative w-full aspect-video flex items-end justify-center overflow-hidden rounded-2xl bg-gray-200 dark:bg-gray-800" style={{minHeight:'320px', maxHeight:'480px'}}>
                   <img
                     src={mainArticle.featured_image_url}
                     alt={mainTitle}
-                    className="w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                   <div className="absolute bottom-0 left-0 w-full p-4 pb-6">

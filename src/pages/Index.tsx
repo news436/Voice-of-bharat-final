@@ -104,6 +104,7 @@ const Index = () => {
         const videosResponse = await supabase
           .from('videos')
           .select('*')
+          .order('created_at', { ascending: false })
           .limit(4);
         if (videosResponse.data) {
           setVideos(videosResponse.data);
@@ -113,7 +114,8 @@ const Index = () => {
         const streamsResponse = await supabase
           .from('live_streams')
           .select('*')
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
         if (streamsResponse.data) {
           setLiveStreams(streamsResponse.data);
         }
@@ -192,6 +194,7 @@ const Index = () => {
                <div><WeatherReport /></div>
                <div><StockWidget /></div>
                <div><AdSlot slotNumber={1} /></div>
+               <div><AdSlot slotNumber={12} /></div>
              </div>
           </div>
         </div>
@@ -209,6 +212,11 @@ const Index = () => {
           {latestArticles.length === 0 && (
             <div className="text-center text-gray-500 my-8">No news articles available.</div>
           )}
+        </div>
+
+        {/* Ad Slot 14 - Between Latest News and Latest Videos */}
+        <div className="my-6">
+          <AdSlot slotNumber={14} />
         </div>
 
         {videos.length > 0 && (

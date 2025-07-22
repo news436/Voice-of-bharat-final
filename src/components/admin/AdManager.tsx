@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Smartphone, Monitor } from 'lucide-react';
 
-const AD_SLOTS = [1, 2, 3, 4, 5, 6, 7];
+const AD_SLOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 
 export const AdManager = () => {
   const [ads, setAds] = useState<{ [slot: number]: any }>({});
@@ -43,7 +43,11 @@ export const AdManager = () => {
           enabled: false,
           image_url: '',
           redirect_url: '',
-          ad_type: 'html'
+          ad_type: 'html',
+          image_width: null,
+          image_height: null,
+          mobile_height: null,
+          desktop_height: null
         };
       }
     });
@@ -81,6 +85,25 @@ export const AdManager = () => {
       const file = e.target.files[0];
       handleAdChange(slot, 'imageFile', file);
       handleAdChange(slot, 'imagePreview', URL.createObjectURL(file));
+      
+      // Get image dimensions
+      const img = new Image();
+      img.onload = () => {
+        const { width, height } = getSlotDimensions(slot);
+        const aspectRatio = img.width / img.height;
+        
+        // Calculate responsive heights
+        const mobileHeight = Math.round(width / aspectRatio);
+        const desktopHeight = Math.round(width / aspectRatio);
+        
+        handleAdChange(slot, 'image_width', img.width);
+        handleAdChange(slot, 'image_height', img.height);
+        handleAdChange(slot, 'mobile_height', mobileHeight);
+        handleAdChange(slot, 'desktop_height', desktopHeight);
+        
+        // (Removed: warning logic)
+      };
+      img.src = URL.createObjectURL(file);
     }
   };
 
@@ -100,9 +123,13 @@ export const AdManager = () => {
       slot_number: slot,
       html_code: ad.html_code || '',
       enabled: ad.enabled,
-        image_url: finalImageUrl || '',
-        redirect_url: ad.redirect_url || '',
-        ad_type: ad.ad_type || 'html',
+      image_url: finalImageUrl || '',
+      redirect_url: ad.redirect_url || '',
+      ad_type: ad.ad_type || 'html',
+      image_width: ad.image_width || null,
+      image_height: ad.image_height || null,
+      mobile_height: ad.mobile_height || null,
+      desktop_height: ad.desktop_height || null,
     };
     
     console.log('Ad upsertData:', upsertData);
@@ -135,19 +162,29 @@ export const AdManager = () => {
   const getSlotDescription = (slot: number) => {
     switch (slot) {
       case 1:
-        return 'Homepage sidebar (top)';
+        return 'Homepage sidebar (top) (400x400) any square shape greater than 400x400';
       case 2:
-        return 'Homepage top banner';
+        return 'Homepage Top Banner (1920×1080)';
       case 3:
-        return 'Homepage bottom banner';
+        return 'Homepage Bottom Banner (1920×1080)';
       case 4:
-        return 'Homepage after featured articles';
+        return 'Homepage After Featured Articles (900x300)';
       case 5:
-        return 'Article pages - top banner';
+        return 'Article/Video/Live Top Banner (1920×1080)';
       case 6:
-        return 'Live news pages - sidebar';
+        return 'Sidebar (Article/Video/Live) (300×375)';
       case 7:
-        return 'Latest news page - bottom banner';
+        return 'Homepage/Live/Video Bottom Banner (1920×1080)';
+      case 8:
+        return 'Between Article End & More Articles / Video/Live (900×600)';
+      case 9:
+        return 'Between Article End & More Articles / Video/Live (900×600)';
+      case 10:
+        return "After 'View More' in More Articles (900×600)";
+      case 11:
+        return "After 'View More' in More Articles (side by side) (900×600)";
+      case 12:
+        return 'Homepage sidebar (bottom) (400x400) square shape';
       default:
         return 'General ad slot';
     }
@@ -159,12 +196,21 @@ export const AdManager = () => {
         return { width: 300, height: 250, description: 'Sidebar Banner (300×250)' };
       case 2:
       case 3:
-      case 4:
       case 5:
       case 7:
-        return { width: 2275, height: 150, description: 'Large Banner (2275x150)' };
+        return { width: 1920, height: 1080, description: getSlotDescription(slot) };
+      case 4:
+        return { width: 1200, height: 280, description: getSlotDescription(slot) };
       case 6:
-        return { width: 300, height: 375, description: 'Taller Rectangle (300×375)' };
+        return { width: 300, height: 375, description: getSlotDescription(slot) };
+      case 8:
+      case 9:
+        return { width: 900, height: 600, description: getSlotDescription(slot) };
+      case 10:
+      case 11:
+        return { width: 900, height: 600, description: getSlotDescription(slot) };
+      case 12:
+        return { width: 240, height: 250, description: 'Sidebar Banner (240×250)' };
       default:
         return { width: 300, height: 250, description: 'Standard Banner (300×250)' };
     }
@@ -196,7 +242,7 @@ export const AdManager = () => {
       </div>
 
       <Tabs defaultValue="slot-1" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-7 mb-10">
           {AD_SLOTS.map(slot => (
             <TabsTrigger key={slot} value={`slot-${slot}`}>Slot {slot}</TabsTrigger>
           ))}
@@ -210,11 +256,6 @@ export const AdManager = () => {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Ad Slot {slot}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {getSlotDescription(slot)} - Configure your ad content below.
-                      {ads[slot]?.ad_type === 'image' && (
-                        <span className="block mt-1 text-xs font-medium text-blue-600">
-                          📏 Recommended: {getSlotDimensions(slot).description}
-                        </span>
-                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -270,9 +311,6 @@ export const AdManager = () => {
                             onChange={(e) => handleImageChange(slot, e)}
                             className="mt-1"
                           />
-                          <p className="mt-1 text-xs text-blue-600 font-medium">
-                            Required dimensions: {getSlotDimensions(slot).width}x{getSlotDimensions(slot).height}px
-                          </p>
                         </div>
 
                         <div>
@@ -289,6 +327,28 @@ export const AdManager = () => {
                             URL where users will be redirected when they click the ad
                           </p>
                         </div>
+
+                        {/* Image Dimensions Info */}
+                        {ads[slot]?.image_width && ads[slot]?.image_height && (
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
+                              📏 Current Image Dimensions
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                              Original: {ads[slot].image_width} × {ads[slot].image_height}px
+                            </p>
+                            {ads[slot]?.mobile_height && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                Mobile: {getSlotDimensions(slot).width} × {ads[slot].mobile_height}px
+                              </p>
+                            )}
+                            {ads[slot]?.desktop_height && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                Desktop: {getSlotDimensions(slot).width} × {ads[slot].desktop_height}px
+                              </p>
+                            )}
+                          </div>
+                        )}
                           </div>
                         )}
                   </div>
@@ -301,7 +361,6 @@ export const AdManager = () => {
                         <div className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <Monitor className="h-4 w-4" />
                           <span>Desktop</span>
-                          <span className="ml-2 text-xs text-blue-600">{getSlotDimensions(slot).width}x{getSlotDimensions(slot).height}px</span>
                         </div>
                         <div
                           className="relative border rounded-md bg-gray-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden mx-auto"
@@ -365,13 +424,13 @@ export const AdManager = () => {
                 </div>
 
                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      onClick={() => saveAd(slot)}
-                      disabled={saving[slot] || isLoading}
-                    >
-                      {saving[slot] ? 'Saving...' : `Save Slot ${slot}`}
-                    </Button>
+                   <Button
+                     type="button"
+                     onClick={() => saveAd(slot)}
+                     disabled={saving[slot] || isLoading}
+                   >
+                     {saving[slot] ? 'Saving...' : `Save Slot ${slot}`}
+                   </Button>
                  </div>
               </div>
             </div>

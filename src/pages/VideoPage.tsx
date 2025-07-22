@@ -27,8 +27,10 @@ import {
   fetchFacebookUrl,
   getShortDescription,
   generateVideoShareMessage,
+  generateCustomVideoWhatsAppShareText,
 } from '@/utils/urlShortener';
 import { Check, Copy } from 'lucide-react';
+import { updateMetaTags, resetMetaTags } from '@/utils/metaTags';
 
 const VideoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,7 +72,29 @@ const VideoPage = () => {
           console.error("Error fetching video:", error);
         }
         setVideo(videoData);
-
+        // Set meta tags for this video
+        if (videoData) {
+          const title = language === 'hi' && videoData.title_hi ? videoData.title_hi : videoData.title;
+          const description = language === 'hi' && videoData.description_hi ? videoData.description_hi : videoData.description;
+          const image = videoData.thumbnail_url || videoData.featured_image_url || `${window.location.origin}/logo.png`;
+          const url = window.location.href;
+          const tags = [];
+          if (videoData.categories?.name) tags.push(videoData.categories.name);
+          if (videoData.states?.name) tags.push(videoData.states.name);
+          updateMetaTags({
+            title: `${title} - Voice of Bharat`,
+            description: description || 'Latest news and updates from Voice of Bharat',
+            image: image,
+            url: url,
+            type: 'video.other',
+            siteName: 'Voice of Bharat',
+            twitterHandle: '@voiceofbharat',
+            author: videoData.publisher_name || 'Voice of Bharat',
+            publishedTime: videoData.created_at,
+            section: videoData.categories?.name || 'Videos',
+            tags: tags
+          });
+        }
         // Fetch related videos (latest 5, excluding current)
         const { data: relatedData } = await supabase
           .from("videos")
@@ -91,7 +115,10 @@ const VideoPage = () => {
     };
     fetchData();
     fetchFacebookUrl().then(setFacebookUrl);
-  }, [id, filter, sort]);
+    return () => {
+      resetMetaTags();
+    };
+  }, [id, filter, sort, language]);
 
   const shortDescription = getShortDescription(language === 'hi' && video?.description_hi ? video.description_hi : video?.description || '');
   const previewUrl = video?.id ? generateVideoShortPreviewUrl(video.id) : '';
@@ -101,6 +128,12 @@ const VideoPage = () => {
   const copyVideoLink = async () => {
     if (!video?.id) return;
     try {
+      const shareMessage = generateCustomVideoWhatsAppShareText(
+        video?.title || '',
+        video?.id || '',
+        getShortDescription(language === 'hi' && video?.description_hi ? video.description_hi : video?.description || ''),
+        facebookUrl
+      );
       await copyToClipboard(shareMessage);
       setCopied(true);
       toast({
@@ -121,6 +154,12 @@ const VideoPage = () => {
   const shareOnWhatsApp = async () => {
     if (!video?.id) return;
     try {
+      const shareMessage = generateCustomVideoWhatsAppShareText(
+        video?.title || '',
+        video?.id || '',
+        getShortDescription(language === 'hi' && video?.description_hi ? video.description_hi : video?.description || ''),
+        facebookUrl
+      );
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareMessage)}`;
       window.open(whatsappUrl, '_blank');
       setShowShareDropdown(false);
@@ -413,6 +452,10 @@ const VideoPage = () => {
           {/* Ad Slot 7 - Video pages bottom banner */}
           <div className="mt-8">
             <AdSlot slotNumber={7} />
+          </div>
+          <div className="my-8 flex flex-col items-center gap-6">
+            <AdSlot slotNumber={8} />
+            <AdSlot slotNumber={9} />
           </div>
         </main>
       </div>
