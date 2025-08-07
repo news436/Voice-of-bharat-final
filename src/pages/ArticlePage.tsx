@@ -540,7 +540,16 @@ const ArticlePage = () => {
                     prose-blockquote:border-l-red-600
                     prose-blockquote:bg-gray-50 dark:prose-blockquote:bg-gray-800
                     prose-img:rounded-lg prose-img:shadow-lg
-                    prose-hr:border-gray-300 dark:prose-hr:border-gray-600"
+                    prose-hr:border-gray-300 dark:prose-hr:border-gray-600
+                    prose-ul:text-gray-700 dark:prose-ul:text-gray-300
+                    prose-ol:text-gray-700 dark:prose-ol:text-gray-300
+                    prose-li:text-gray-700 dark:prose-li:text-gray-300
+                    prose-code:text-gray-900 dark:prose-code:text-gray-100
+                    prose-pre:bg-gray-100 dark:prose-pre:bg-gray-800
+                    prose-pre:text-gray-900 dark:prose-pre:text-gray-100
+                    prose-table:text-gray-700 dark:prose-table:text-gray-300
+                    prose-th:text-gray-900 dark:prose-th:text-white
+                    prose-td:text-gray-700 dark:prose-td:text-gray-300"
                   dangerouslySetInnerHTML={{ __html: content }} 
                 />
 

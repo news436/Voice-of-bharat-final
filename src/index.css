@@ -211,3 +211,63 @@ html, body {
 .ql-snow .ql-picker.ql-lineheight .ql-picker-item {
   padding-left: 10px; /* Add some padding for readability */
 }
+
+/* Dark mode overrides for article content */
+.dark .prose {
+  color: hsl(var(--foreground));
+}
+
+.dark .prose * {
+  color: inherit;
+}
+
+.dark .prose p,
+.dark .prose ul,
+.dark .prose ol,
+.dark .prose li,
+.dark .prose blockquote,
+.dark .prose table,
+.dark .prose td,
+.dark .prose th {
+  color: hsl(var(--muted-foreground));
+}
+
+.dark .prose h1,
+.dark .prose h2,
+.dark .prose h3,
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6,
+.dark .prose strong,
+.dark .prose b {
+  color: hsl(var(--foreground));
+}
+
+.dark .prose a {
+  color: hsl(var(--primary));
+}
+
+.dark .prose code {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted));
+}
+
+.dark .prose pre {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+/* Override any inline styles that might interfere with dark mode */
+.dark .prose [style*="color: black"],
+.dark .prose [style*="color: #000"],
+.dark .prose [style*="color: rgb(0,0,0)"],
+.dark .prose [style*="color: rgba(0,0,0"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .prose [style*="color: white"],
+.dark .prose [style*="color: #fff"],
+.dark .prose [style*="color: rgb(255,255,255)"],
+.dark .prose [style*="color: rgba(255,255,255"] {
+  color: hsl(var(--foreground)) !important;
+}
